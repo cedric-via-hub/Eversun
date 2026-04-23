@@ -7,6 +7,7 @@ import ThemeProvider from '@/components/ThemeProvider';
 import ConditionalHeader from '@/components/ConditionalHeader';
 import MainWrapper from '@/components/MainWrapper';
 import ErrorBoundary from '@/components/ui/ErrorBoundary';
+import ServiceWorker from '@/components/ServiceWorker';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -35,6 +36,7 @@ export default function RootLayout({
         <QueryProvider>
           <ThemeProvider>
             <ToastProvider />
+            <ServiceWorker />
             <ConditionalHeader />
             <ErrorBoundary>
               <MainWrapper>{children}</MainWrapper>

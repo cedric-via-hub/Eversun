@@ -1,15 +1,54 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { List, CaretUp } from '@phosphor-icons/react';
-import Sidebar from '@/components/Sidebar';
-import ClientSection from '@/components/ClientSection';
-import DashboardOverview from '@/components/DashboardOverview';
-import ClientAggregationView from '@/components/ClientAggregationView';
 import PageTransition from '@/components/PageTransition';
 import SectionTransition from '@/components/SectionTransition';
 import { Section } from '@/types/client';
 import { useAppStore } from '@/store/useAppStore';
+
+const Sidebar = dynamic(() => import('@/components/Sidebar'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-56 h-screen bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 animate-pulse" />
+  ),
+});
+
+const ClientAggregationView = dynamic(
+  () => import('@/components/ClientAggregationView'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="p-8 rounded-3xl bg-slate-50 dark:bg-slate-900 shadow-lg">
+        <div className="h-6 w-48 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse mb-6" />
+        <div className="space-y-3">
+          {[...Array(3)].map((_, index) => (
+            <div key={index} className="h-14 bg-slate-200 dark:bg-slate-700 rounded-3xl animate-pulse" />
+          ))}
+        </div>
+      </div>
+    ),
+  }
+);
+
+const ClientSection = dynamic(
+  () => import('@/components/ClientSection'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="p-8 rounded-3xl bg-slate-50 dark:bg-slate-900 shadow-lg">
+        <div className="h-6 w-44 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse mb-6" />
+        <div className="space-y-3">
+          {[...Array(5)].map((_, index) => (
+            <div key={index} className="h-12 bg-slate-200 dark:bg-slate-700 rounded-3xl animate-pulse" />
+          ))}
+        </div>
+      </div>
+    ),
+  }
+);
+
 
 interface DashboardProps {
   /** Section initiale (optionnel, défaut: 'dp-en-cours') */
@@ -28,6 +67,15 @@ export default function Dashboard({ initialSection = 'dp-en-cours' }: DashboardP
       setActiveSection(initialSection);
     }
   }, [initialSection, setActiveSection]);
+
+  useEffect(() => {
+    // Prefetch components based on active section
+    if (activeSection === 'clients') {
+      import('@/components/ClientAggregationView');
+    } else {
+      import('@/components/ClientSection');
+    }
+  }, [activeSection]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -89,7 +137,7 @@ export default function Dashboard({ initialSection = 'dp-en-cours' }: DashboardP
         {showBackToTop && (
           <button
             onClick={scrollToTop}
-            className="fixed bottom-6 right-6 z-50 p-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg shadow-md hover:shadow hover:scale-[1.01] transition-all duration-200"
+            className="fixed bottom-6 right-6 z-50 p-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-lg shadow-md hover:shadow hover:scale-[1.01] transition-all duration-200"
             aria-label="Retour en haut"
           >
             <CaretUp className="h-6 w-6" weight="bold" />

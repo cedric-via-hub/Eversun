@@ -1,4 +1,4 @@
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { useClientTableFilters, useClientTablePagination } from '@/hooks/useClientTable';
 import { ClientRecord } from '@/types/client';
 
@@ -101,7 +101,7 @@ describe('useClientTablePagination', () => {
     expect(result.current.totalPages).toBe(3); // 25 items / 10 per page = 3 pages
   });
 
-  it('handles page change', () => {
+  it('handles page change', async () => {
     const { result } = renderHook(() =>
       useClientTablePagination({ totalItems: 25 })
     );
@@ -110,7 +110,9 @@ describe('useClientTablePagination', () => {
       result.current.handlePageChange(2);
     });
 
-    expect(result.current.page).toBe(2);
+    await waitFor(() => {
+      expect(result.current.page).toBe(2);
+    });
   });
 
   it('does not change page if same page is selected', () => {
@@ -127,7 +129,7 @@ describe('useClientTablePagination', () => {
     expect(result.current.page).toBe(initialPage);
   });
 
-  it('calculates correct start and end indices', () => {
+  it('calculates correct start and end indices', async () => {
     const { result } = renderHook(() =>
       useClientTablePagination({ totalItems: 25 })
     );
@@ -139,7 +141,9 @@ describe('useClientTablePagination', () => {
       result.current.handlePageChange(2);
     });
 
-    expect(result.current.startIndex).toBe(10);
-    expect(result.current.endIndex).toBe(20);
+    await waitFor(() => {
+      expect(result.current.startIndex).toBe(10);
+      expect(result.current.endIndex).toBe(20);
+    });
   });
 });

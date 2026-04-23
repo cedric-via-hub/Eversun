@@ -137,7 +137,7 @@ export async function GET(request: Request) {
         }
       }
 
-      const clientRecords = await Model.find().sort({ client: 1 });
+      const clientRecords = await Model.find().sort({ client: 1 }).maxTimeMS(30000);
       return NextResponse.json({ data: clientRecords, synced: true });
     }
 
@@ -146,7 +146,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ data: clientRecord });
     }
 
-    const clientRecords = await Model.find().sort({ client: 1 });
+    const clientRecords = await Model.find().sort({ client: 1 }).maxTimeMS(30000);
     return NextResponse.json({ data: clientRecords });
   } catch (error: any) {
     console.error('Error fetching clients:', error);

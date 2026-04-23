@@ -17,6 +17,7 @@ import {
   List,
   Users,
 } from '@phosphor-icons/react';
+import { HomeIcon, DocumentTextIcon, CheckBadgeIcon, XMarkIcon, EllipsisHorizontalIcon, BoltIcon, FlagIcon } from '@heroicons/react/24/outline';
 import { Section } from '@/types/client';
 
 interface SidebarProps {
@@ -41,7 +42,7 @@ const sectionGroups = [
       {
         id: 'clients' as const,
         label: 'Clients',
-        icon: Users,
+        icon: HomeIcon,
       },
     ],
   },
@@ -168,7 +169,7 @@ export default function Sidebar({
       </AnimatePresence>
 
       <aside
-        className={`bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-[calc(100vh-3.5rem)] z-40 flex flex-col shadow-md transition-all duration-200 flex-shrink-0 ${
+        className={`bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border-r border-white/20 dark:border-slate-700/50 h-[calc(100vh-3.5rem)] z-40 flex flex-col shadow-xl transition-all duration-300 flex-shrink-0 ${
           isMobile
             ? isMobileOpen
               ? 'translate-x-0 w-64 fixed left-0'
@@ -200,7 +201,7 @@ export default function Sidebar({
               placeholder="Rechercher..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-10 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200"
+              className="w-full pl-10 pr-10 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white/50 dark:bg-slate-700/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm"
             />
             {searchQuery && (
               <button
@@ -232,11 +233,11 @@ export default function Sidebar({
                   <li key={section.id} role="listitem">
                     <button
                       onClick={() => setActiveSection(section.id)}
-                      className={`w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center gap-3 group relative overflow-hidden
+                      className={`w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-300 flex items-center gap-3 group relative overflow-hidden
                         ${
                           activeSection === section.id
-                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md ring-2 ring-amber-500 ring-offset-2 ring-offset-white dark:ring-offset-gray-900 transform scale-[1.01]'
-                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900'
+                            ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg ring-2 ring-primary-500 ring-offset-2 ring-offset-white dark:ring-offset-slate-900 transform scale-[1.02]'
+                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-700/50 hover:shadow-md hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900'
                         }`}
                       tabIndex={0}
                       aria-current={activeSection === section.id ? 'page' : undefined}

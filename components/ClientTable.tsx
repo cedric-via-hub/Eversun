@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, memo } from 'react';
 import Badge from '@/components/ui/Badge';
 import {
   MagnifyingGlass,

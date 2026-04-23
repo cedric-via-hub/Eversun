@@ -29,36 +29,36 @@ interface KPICardProps {
 
 function KPICard({ title, value, icon, color, trend, description }: KPICardProps) {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 shadow-md hover:shadow hover:border-amber-500 dark:hover:border-amber-500 transition-all duration-200 hover:scale-[1.01] group">
+    <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-2xl p-6 border border-white/20 dark:border-slate-700/50 shadow-lg hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 hover:scale-[1.02] group">
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <p className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">
+          <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">
             {title}
           </p>
-          <p className="text-4xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+          <p className="text-4xl font-bold bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text text-transparent">
             {value}
           </p>
           {description && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 font-medium">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">
               {description}
             </p>
           )}
         </div>
-        <div className={`p-4 rounded-lg bg-gradient-to-br ${color} shadow group-hover:scale-[1.01] group-hover:rotate-3 transition-all duration-200`}>
+        <div className={`p-4 rounded-xl bg-gradient-to-br ${color} shadow-lg group-hover:scale-[1.05] group-hover:rotate-3 transition-all duration-300`}>
           {icon}
         </div>
       </div>
       {trend !== undefined && (
-        <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-2 mt-4 pt-4 border-t border-slate-200/50 dark:border-slate-700/50">
           {trend > 0 ? (
-            <ArrowUp className="h-4 w-4 text-green-500" weight="bold" />
+            <ArrowUp className="h-4 w-4 text-success-500" weight="bold" />
           ) : (
-            <ArrowDown className="h-4 w-4 text-red-500" weight="bold" />
+            <ArrowDown className="h-4 w-4 text-error-500" weight="bold" />
           )}
-          <span className={`text-sm font-bold ${trend > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+          <span className={`text-sm font-bold ${trend > 0 ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'}`}>
             {Math.abs(trend)}%
           </span>
-          <span className="text-sm text-gray-500 dark:text-gray-400">vs mois dernier</span>
+          <span className="text-sm text-slate-500 dark:text-slate-400">vs mois dernier</span>
         </div>
       )}
     </div>
@@ -76,22 +76,22 @@ function SectionProgress({ title, count, total, color }: SectionProgressProps) {
   const percentage = total > 0 ? (count / total) * 100 : 0;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg p-5 border border-gray-200 dark:border-gray-700 shadow-md hover:shadow hover:border-amber-500 dark:hover:border-amber-500 transition-all duration-200 hover:scale-[1.01] group">
+    <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-2xl p-5 border border-white/20 dark:border-slate-700/50 shadow-lg hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 hover:scale-[1.02] group">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
           {title}
         </span>
-        <span className="text-sm font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+        <span className="text-sm font-bold bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text text-transparent">
           {count}/{total}
         </span>
       </div>
-      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+      <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
         <div
           className={`h-3 rounded-full transition-all duration-500 ease-out ${color} shadow group-hover:shadow-md`}
           style={{ width: `${percentage}%` }}
         />
       </div>
-      <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mt-3">
+      <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 mt-3">
         {percentage.toFixed(1)}% du total
       </p>
     </div>

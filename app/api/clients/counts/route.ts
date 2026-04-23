@@ -32,7 +32,7 @@ export async function GET() {
         const Model =
           mongoose.models[col.name] ||
           mongoose.model(col.name, ClientSchema, col.name);
-        const count = await Model.countDocuments();
+        const count = await Model.countDocuments().maxTimeMS(30000);
         counts[col.section] = count;
       } catch (err: any) {
         console.error(`Error counting ${col.name}:`, err);
