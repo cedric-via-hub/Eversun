@@ -7,13 +7,6 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  experimental: {
-    turbo: {
-      resolveAlias: {
-        // Add alias configuration if needed
-      },
-    },
-  },
 }
 
 module.exports = nextConfig;

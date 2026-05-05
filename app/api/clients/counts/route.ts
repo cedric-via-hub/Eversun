@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 import { ClientSchema } from '@/lib/clientModel';
 import { clientCollectionName } from '@/lib/sectionConfig';
 
-export const revalidate = 30; // Cache 30 secondes
+export const revalidate = 10; // Cache 10 secondes
 export const dynamic = 'force-dynamic';
 
 export async function GET() {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { parseJsonSafe } from '@/lib/utils';
 import { List, CaretUp } from '@phosphor-icons/react';
@@ -10,6 +10,8 @@ import SectionTransition from '@/components/SectionTransition';
 import { Section } from '@/types/client';
 import { useAppStore } from '@/store/useAppStore';
 import useDebounceCallback from '@/hooks/useDebounceCallback';
+import { useUser } from '@/hooks/useUser';
+import { useToastStore } from '@/store/useToastStore';
 
 // Code splitting pour les composants lourds
 const ClientSection = dynamic(() => import('@/components/ClientSection'), {
@@ -54,6 +56,10 @@ export default function Dashboard({
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [isSectionLoading, setIsSectionLoading] = useState(false);
+  const lastActivityRef = useRef(Date.now());
+
+  const { data: user } = useUser();
+  const addToast = useToastStore((state) => state.addToast);
 
   const handleScroll = useCallback(() => {
     setShowBackToTop(window.scrollY > 300);
@@ -66,6 +72,43 @@ export default function Dashboard({
       setActiveSection(initialSection);
     }
   }, [initialSection, setActiveSection]);
+
+  // Welcome message for specific users
+  useEffect(() => {
+    if (user?.email) {
+      if (user.email === 'f.randrianarivo@eversun.fr') {
+        addToast('info', 'Bienvenue Fy', 3000);
+      } else if (user.email === 'c.via@eversun.fr') {
+        addToast('info', 'Bienvenue Cédric', 3000);
+      }
+    }
+  }, [user, addToast]);
+
+  // Inactivity detection
+  useEffect(() => {
+    const updateActivity = () => {
+      lastActivityRef.current = Date.now();
+    };
+
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    events.forEach(event => document.addEventListener(event, updateActivity));
+
+    const checkInactivity = () => {
+      const now = Date.now();
+      const inactiveTime = now - lastActivityRef.current;
+      if (inactiveTime > 5 * 60 * 1000) { // 5 minutes
+        addToast('info', 'De retour parmi nous 👋', 3000);
+        window.location.reload();
+      }
+    };
+
+    const interval = setInterval(checkInactivity, 60 * 1000); // Check every minute
+
+    return () => {
+      events.forEach(event => document.removeEventListener(event, updateActivity));
+      clearInterval(interval);
+    };
+  }, [addToast]);
 
   useEffect(() => {
     window.addEventListener('scroll', debouncedHandleScroll);
@@ -94,7 +137,16 @@ export default function Dashboard({
     const fetchSectionCounts = async () => {
       try {
         const res = await fetch('/api/clients/counts');
-        const response = await res.json();
+        if (!res.ok) {
+          const errorText = await res.text();
+          throw new Error(`Failed to fetch section counts (${res.status}): ${errorText}`);
+        }
+        const text = await res.text();
+        if (!text) {
+          console.warn('Empty response body from /api/clients/counts');
+          return;
+        }
+        const response = JSON.parse(text);
         if (response.counts) {
           setSectionCounts(response.counts);
         }

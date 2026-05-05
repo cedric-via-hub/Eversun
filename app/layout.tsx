@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
 import { QueryProvider } from '@/lib/react-query';
 import ToastProvider from '@/components/ui/ToastProvider';
@@ -30,10 +31,11 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#006d6f" />
-        <script
+        <Script
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var raw=localStorage.getItem('app-storage');var t=null;if(raw){var s=JSON.parse(raw);t=s&&s.state&&s.state.theme;}if(!t){t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}var root=document.documentElement;root.classList.toggle('dark',t==='dark');}catch(e){}})();`,
           }}
+          strategy="beforeInteractive"
         />
       </head>
       <body

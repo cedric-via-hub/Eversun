@@ -74,12 +74,13 @@ export function useClients({
  */
 export function useClientCounts() {
   const setSectionCounts = useAppStore((state) => state.setSectionCounts);
-  
+
   const query = useQuery({
     queryKey: clientKeys.counts(),
     queryFn: clientApi.getCounts,
-    staleTime: 60 * 1000, // 1 minute
-    refetchInterval: 60 * 1000, // Auto-refresh every minute
+    staleTime: 10 * 1000, // 10 seconds
+    refetchInterval: 30 * 1000, // Auto-refresh every 30 seconds
+    gcTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Update store when data changes

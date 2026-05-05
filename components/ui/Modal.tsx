@@ -132,22 +132,22 @@ const Modal = ({
             aria-modal="true"
             aria-labelledby={title ? 'modal-title' : undefined}
           >
-            <div className="bg-primary backdrop-blur-xl shadow-md w-full flex flex-col overflow-hidden rounded-lg border border-primary max-h-[90vh]">
+            <div className="bg-white dark:bg-slate-900 backdrop-blur-xl shadow-xl w-full flex flex-col overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 max-h-[90vh]">
               {/* Header */}
               {title && (
-                <div className="flex items-center justify-between px-6 py-4 border-b border-primary bg-secondary">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
                   <h2
                     id="modal-title"
-                    className="text-xl font-bold text-primary"
+                    className="text-xl font-bold text-slate-900 dark:text-slate-100"
                   >
                     {title}
                   </h2>
                   <button
                     onClick={onClose}
-                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 hover:scale-[1.01] group"
+                    className="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-200 hover:scale-[1.01] group"
                   >
                     <X
-                      className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-amber-600 dark:group-hover:text-amber-400"
+                      className="w-5 h-5 text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white"
                       weight="bold"
                     />
                   </button>
@@ -155,7 +155,7 @@ const Modal = ({
               )}
 
               {/* Content */}
-              <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6 bg-primary">
+              <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100">
                 {children}
               </div>
             </div>

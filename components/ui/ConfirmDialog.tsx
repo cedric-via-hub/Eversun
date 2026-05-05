@@ -88,7 +88,7 @@ export default function ConfirmDialog({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="sm">
-      <div className="text-center px-2">
+      <div className="text-center px-2 bg-white dark:bg-slate-950 rounded-2xl">
         {/* Icon with elegant design */}
         <div
           className={`mx-auto flex items-center justify-center h-20 w-20 rounded-full border-2 ${styles.iconBg} ${styles.iconBorder} mb-6 shadow-lg`}
@@ -97,12 +97,12 @@ export default function ConfirmDialog({
         </div>
 
         {/* Title with better typography */}
-        <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-200 bg-clip-text text-transparent mb-3">
+        <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-3">
           {title}
         </h3>
 
         {/* Message with better spacing */}
-        <p className="text-base text-gray-600 dark:text-gray-300 mb-8 leading-relaxed px-4">
+        <p className="text-base text-slate-600 dark:text-slate-300 mb-8 leading-relaxed px-4">
           {message}
         </p>
 

@@ -1,6 +1,14 @@
 'use client';
 
-import { useState, memo, lazy, Suspense, useCallback, useEffect, useRef } from 'react';
+import {
+  useState,
+  memo,
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+} from 'react';
 import Badge from '@/components/ui/Badge';
 import Tooltip from '@/components/ui/Tooltip';
 import {
@@ -44,15 +52,24 @@ interface ClientTableNewProps {
   onSearchChange?: (value: string) => void;
 }
 
-function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: externalSearchQuery, onSearchChange }: ClientTableNewProps) {
+function ClientTableNew({
+  section,
+  onEdit,
+  onDelete,
+  onRefresh,
+  searchQuery: externalSearchQuery,
+  onSearchChange,
+}: ClientTableNewProps) {
   // Pagination & sorting state
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [sortKey, setSortKey] = useState<string>('client');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [isPageTransitioning, setIsPageTransitioning] = useState(false);
-  const [transitionDirection, setTransitionDirection] = useState<'left' | 'right'>('right');
-  
+  const [transitionDirection, setTransitionDirection] = useState<
+    'left' | 'right'
+  >('right');
+
   // Search & filters state
   const [internalSearch, setInternalSearch] = useState('');
   const isExternalSearch = externalSearchQuery !== undefined;
@@ -72,9 +89,14 @@ function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: ext
   const [filterDateTo, setFilterDateTo] = useState('');
 
   // Modal state
-  const [selectedClient, setSelectedClient] = useState<ClientRecord | null>(null);
+  const [selectedClient, setSelectedClient] = useState<ClientRecord | null>(
+    null
+  );
   const [showPassword, setShowPassword] = useState(false);
-  const [updateMessage, setUpdateMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [updateMessage, setUpdateMessage] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
 
   // React Query hooks
   const filters = {
@@ -125,13 +147,11 @@ function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: ext
 
     if (section === 'sunlib' || section === 'otovo') {
       cols.push(
-        { key: 'clientId', label: 'N° Badge' },
         { key: 'client', label: 'Client' },
         { key: 'ville', label: 'Ville' }
       );
     } else if (isDp) {
       cols.push(
-        { key: 'clientId', label: 'N° Badge' },
         { key: 'client', label: 'Client' },
         { key: 'dateEnvoi', label: "Date d'envoi" },
         { key: 'dateEstimative', label: 'Date estimative' },
@@ -147,7 +167,6 @@ function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: ext
       }
     } else if (section === 'daact') {
       cols.push(
-        { key: 'clientId', label: 'N° Badge' },
         { key: 'client', label: 'Client' },
         { key: 'dateEnvoi', label: "Date d'envoi" },
         { key: 'statut', label: 'Statut' },
@@ -155,7 +174,6 @@ function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: ext
       );
     } else if (section === 'installation') {
       cols.push(
-        { key: 'clientId', label: 'N° Badge' },
         { key: 'client', label: 'Client' },
         { key: 'dateEstimative', label: 'Date de pose prévu' },
         { key: 'statut', label: 'Statut' },
@@ -163,7 +181,6 @@ function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: ext
       );
     } else if (isConsuel) {
       cols.push(
-        { key: 'clientId', label: 'N° Badge' },
         { key: 'client', label: 'Client' },
         { key: 'dateEnvoi', label: "Date d'envoi" },
         { key: 'statut', label: 'Statut' },
@@ -172,7 +189,6 @@ function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: ext
       );
     } else if (isRaccordement) {
       cols.push(
-        { key: 'clientId', label: 'N° Badge' },
         { key: 'client', label: 'Client' },
         { key: 'statut', label: 'Statut' },
         { key: 'numeroContrat', label: 'N° Contrat' },
@@ -226,11 +242,21 @@ function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: ext
   // Active filters for FilterChips
   const activeFilters = [
     ...(search ? [{ key: 'search', label: 'Recherche', value: search }] : []),
-    ...(filterStatus ? [{ key: 'status', label: 'Statut', value: filterStatus }] : []),
-    ...(filterVille ? [{ key: 'ville', label: 'Ville', value: filterVille }] : []),
-    ...(filterFinancement ? [{ key: 'financement', label: 'Finance', value: filterFinancement }] : []),
-    ...(filterDateFrom ? [{ key: 'dateFrom', label: 'Date de', value: filterDateFrom }] : []),
-    ...(filterDateTo ? [{ key: 'dateTo', label: 'Date à', value: filterDateTo }] : []),
+    ...(filterStatus
+      ? [{ key: 'status', label: 'Statut', value: filterStatus }]
+      : []),
+    ...(filterVille
+      ? [{ key: 'ville', label: 'Ville', value: filterVille }]
+      : []),
+    ...(filterFinancement
+      ? [{ key: 'financement', label: 'Finance', value: filterFinancement }]
+      : []),
+    ...(filterDateFrom
+      ? [{ key: 'dateFrom', label: 'Date de', value: filterDateFrom }]
+      : []),
+    ...(filterDateTo
+      ? [{ key: 'dateTo', label: 'Date à', value: filterDateTo }]
+      : []),
   ];
 
   if (error) {
@@ -238,7 +264,9 @@ function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: ext
       <div className="p-8 text-center">
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
           <WarningCircle className="w-12 h-12 text-red-500 mx-auto mb-2" />
-          <p className="text-red-700 dark:text-red-400">Erreur lors du chargement des données</p>
+          <p className="text-red-700 dark:text-red-400">
+            Erreur lors du chargement des données
+          </p>
           <Button onClick={() => refetch()} variant="outline" className="mt-4">
             Réessayer
           </Button>
@@ -251,14 +279,19 @@ function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: ext
     <div className="space-y-4">
       {/* Messages */}
       {updateMessage && (
-        <div className={`p-3 rounded-lg text-sm font-medium ${
-          updateMessage.type === 'success' 
-            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' 
-            : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-        }`}>
+        <div
+          className={`p-3 rounded-lg text-sm font-medium ${
+            updateMessage.type === 'success'
+              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+              : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+          }`}
+        >
           <div className="flex items-center justify-between">
             <span>{updateMessage.message}</span>
-            <button onClick={() => setUpdateMessage(null)} className="text-current hover:opacity-70">
+            <button
+              onClick={() => setUpdateMessage(null)}
+              className="text-current hover:opacity-70"
+            >
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -272,7 +305,9 @@ function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: ext
           <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               <div>
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Statut</label>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                  Statut
+                </label>
                 <input
                   type="text"
                   placeholder="Filtrer par statut"
@@ -282,7 +317,9 @@ function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: ext
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Ville</label>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                  Ville
+                </label>
                 <input
                   type="text"
                   placeholder="Filtrer par ville"
@@ -292,7 +329,9 @@ function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: ext
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Financement</label>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                  Financement
+                </label>
                 <input
                   type="text"
                   placeholder="Filtrer par financement"
@@ -302,7 +341,9 @@ function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: ext
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Date (de)</label>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                  Date (de)
+                </label>
                 <DatePicker
                   value={filterDateFrom}
                   onChange={setFilterDateFrom}
@@ -342,11 +383,16 @@ function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: ext
           </div>
           <select
             value={rowsPerPage}
-            onChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(1); }}
+            onChange={(e) => {
+              setRowsPerPage(Number(e.target.value));
+              setPage(1);
+            }}
             className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-500"
           >
             {[10, 20, 50, 100].map((n) => (
-              <option key={n} value={n}>{n}</option>
+              <option key={n} value={n}>
+                {n}
+              </option>
             ))}
           </select>
           <span className="text-sm text-slate-500 dark:text-slate-400">
@@ -356,11 +402,13 @@ function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: ext
       </div>
 
       {/* Table */}
-      <div className={`rounded-xl glass-card shadow-lg overflow-hidden transition-all duration-150 hover-lift ${
-        isPageTransitioning
-          ? `opacity-0 transform ${transitionDirection === 'right' ? 'translate-x-[-20px]' : 'translate-x-[20px]'}`
-          : 'opacity-100 transform translate-x-0'
-      }`}>
+      <div
+        className={`rounded-xl glass-card shadow-lg overflow-hidden transition-all duration-150 hover-lift ${
+          isPageTransitioning
+            ? `opacity-0 transform ${transitionDirection === 'right' ? 'translate-x-[-20px]' : 'translate-x-[20px]'}`
+            : 'opacity-100 transform translate-x-0'
+        }`}
+      >
         <div className="overflow-x-auto">
           <table className="min-w-full text-xs text-slate-900 dark:text-slate-100">
             <thead>
@@ -369,7 +417,9 @@ function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: ext
                   <th
                     key={col.key as string}
                     className={`px-4 py-3 font-bold text-left cursor-pointer select-none hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-all whitespace-nowrap text-[10px] uppercase tracking-wider text-slate-700 dark:text-slate-300 group ${
-                      idx === 0 ? 'sticky left-0 bg-slate-50 dark:bg-slate-800' : ''
+                      idx === 0
+                        ? 'sticky left-0 bg-slate-50 dark:bg-slate-800'
+                        : ''
                     }`}
                     onClick={() => handleSort(col.key as string)}
                   >
@@ -381,28 +431,41 @@ function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: ext
                         </span>
                       )}
                       {sortKey !== col.key && (
-                        <CaretDown className="w-2.5 h-2.5 text-slate-400 opacity-0 group-hover:opacity-100" weight="bold" />
+                        <CaretDown
+                          className="w-2.5 h-2.5 text-slate-400 opacity-0 group-hover:opacity-100"
+                          weight="bold"
+                        />
                       )}
                     </div>
                   </th>
                 ))}
                 <th className="px-4 py-3 text-right">Actions</th>
+                <th className="px-4 py-3 text-left">N° Badge</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={columns.length + 1} className="px-4 py-12 text-center">
+                  <td
+                    colSpan={columns.length + 2}
+                    className="px-4 py-12 text-center"
+                  >
                     <div className="animate-pulse space-y-3">
                       {[...Array(5)].map((_, i) => (
-                        <div key={i} className="h-8 bg-slate-200 dark:bg-slate-700 rounded" />
+                        <div
+                          key={i}
+                          className="h-8 bg-slate-200 dark:bg-slate-700 rounded"
+                        />
                       ))}
                     </div>
                   </td>
                 </tr>
               ) : clients.length === 0 ? (
                 <tr>
-                  <td colSpan={columns.length + 1} className="px-4 py-12 text-center text-slate-500 dark:text-slate-400">
+                  <td
+                    colSpan={columns.length + 2}
+                    className="px-4 py-12 text-center text-slate-500 dark:text-slate-400"
+                  >
                     Aucun résultat trouvé
                   </td>
                 </tr>
@@ -411,7 +474,9 @@ function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: ext
                   <tr
                     key={client._id || client.id || index}
                     className={`border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-all cursor-pointer ${
-                      index % 2 === 0 ? 'bg-white dark:bg-slate-800' : 'bg-slate-50/50 dark:bg-slate-800/50'
+                      index % 2 === 0
+                        ? 'bg-white dark:bg-slate-800'
+                        : 'bg-slate-50/50 dark:bg-slate-800/50'
                     }`}
                     onClick={() => handleRowClick(client)}
                   >
@@ -419,17 +484,24 @@ function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: ext
                       <td
                         key={col.key as string}
                         className={`px-3 py-2 whitespace-nowrap text-xs ${
-                          col.key === 'client' ? 'font-semibold text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-300'
+                          col.key === 'client'
+                            ? 'font-semibold text-slate-900 dark:text-white'
+                            : 'text-slate-600 dark:text-slate-300'
                         }`}
                       >
                         {col.key === 'client' ? (
                           <button
-                            onClick={(e) => { e.stopPropagation(); handleRowClick(client); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRowClick(client);
+                            }}
                             className="text-left w-full font-semibold text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white underline-offset-2 hover:underline"
                           >
                             {client.client || '-'}
                           </button>
-                        ) : col.key === 'portail' && isDp && client.portail?.startsWith('http') ? (
+                        ) : col.key === 'portail' &&
+                          isDp &&
+                          client.portail?.startsWith('http') ? (
                           <a
                             href={client.portail}
                             target="_blank"
@@ -446,16 +518,42 @@ function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: ext
                             {client.identifiant}
                           </span>
                         ) : col.key === 'motDePasse' && client.motDePasse ? (
-                          <span className="font-mono text-xs">{showPassword ? client.motDePasse : '••••••'}</span>
+                          <span className="font-mono text-xs">
+                            {showPassword ? client.motDePasse : '••••••'}
+                          </span>
                         ) : col.key === 'statut' && client.statut ? (
-                          <Badge className={getStatutBadgeColor(client.statut)}>{client.statut}</Badge>
+                          <Badge className={getStatutBadgeColor(client.statut)}>
+                            {client.statut}
+                          </Badge>
                         ) : col.key === 'financement' && client.financement ? (
-                          <Badge className={getFinancementBadgeColor(client.financement)}>{client.financement}</Badge>
+                          <Badge
+                            className={getFinancementBadgeColor(
+                              client.financement
+                            )}
+                          >
+                            {client.financement}
+                          </Badge>
                         ) : col.key === 'typeConsuel' && client.typeConsuel ? (
-                          <Badge className={getTypeConsuelBadgeColor(client.typeConsuel)}>{client.typeConsuel}</Badge>
-                        ) : ['dateEnvoi', 'dateEstimative', 'dateDerniereDemarche', 'dateMiseEnService', 'datePV', 'pvChantierDate'].includes(col.key as string) && client[col.key] ? (
+                          <Badge
+                            className={getTypeConsuelBadgeColor(
+                              client.typeConsuel
+                            )}
+                          >
+                            {client.typeConsuel}
+                          </Badge>
+                        ) : [
+                            'dateEnvoi',
+                            'dateEstimative',
+                            'dateDerniereDemarche',
+                            'dateMiseEnService',
+                            'datePV',
+                            'pvChantierDate',
+                          ].includes(col.key as string) && client[col.key] ? (
                           <span className="inline-flex items-center gap-1 text-slate-600 dark:text-slate-400">
-                            <Calendar className="w-3 h-3 text-slate-500" weight="fill" />
+                            <Calendar
+                              className="w-3 h-3 text-slate-500"
+                              weight="fill"
+                            />
                             {formatDateFR(client[col.key] as string)}
                           </span>
                         ) : (
@@ -467,7 +565,10 @@ function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: ext
                       <div className="flex items-center justify-end gap-1">
                         <Tooltip content="Modifier" position="top">
                           <button
-                            onClick={(e) => { e.stopPropagation(); onEdit(client); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEdit(client);
+                            }}
                             className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 hover-lift"
                           >
                             <Pencil className="w-4 h-4" />
@@ -476,7 +577,10 @@ function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: ext
                         {onDelete && (
                           <Tooltip content="Supprimer" position="top">
                             <button
-                              onClick={(e) => { e.stopPropagation(); onDelete(client); }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete(client);
+                              }}
                               className="p-1.5 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 hover-lift"
                             >
                               <Trash className="w-4 h-4" />
@@ -484,6 +588,9 @@ function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: ext
                           </Tooltip>
                         )}
                       </div>
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-xs text-slate-600 dark:text-slate-300">
+                      {client.clientId || '-'}
                     </td>
                   </tr>
                 ))
@@ -505,11 +612,17 @@ function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: ext
 
       {/* Modal */}
       {selectedClient && (
-        <Suspense fallback={<div className="p-8 text-center">Chargement...</div>}>
+        <Suspense
+          fallback={<div className="p-8 text-center">Chargement...</div>}
+        >
           <ClientModal
             selectedClient={selectedClient}
             onClose={() => setSelectedClient(null)}
             onEdit={onEdit}
+            onDelete={(id: string) => {
+              setSelectedClient(null);
+              onDelete?.({ ...selectedClient, _id: id } as any);
+            }}
             section={section}
             showPassword={showPassword}
             setShowPassword={setShowPassword}

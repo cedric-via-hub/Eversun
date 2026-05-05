@@ -10,9 +10,14 @@ export default function UserMenu() {
   const [showConfirm, setShowConfirm] = useState(false);
   const router = useRouter();
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    router.push('/login');
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
+    } finally {
+      router.push('/login');
+    }
   };
 
   return (

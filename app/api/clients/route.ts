@@ -145,13 +145,18 @@ export async function GET(request: Request) {
 
     const url = new URL(request.url);
     const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 100); // Max 100
+    const limit = Math.min(
+      parseInt(url.searchParams.get('limit') || '20'),
+      100
+    ); // Max 100
     const section = url.searchParams.get('section');
     const search = url.searchParams.get('search') || '';
     const sortKey = url.searchParams.get('sortKey') || 'client';
-    const sortDir = (url.searchParams.get('sortDir') || 'asc') as 'asc' | 'desc';
+    const sortDir = (url.searchParams.get('sortDir') || 'asc') as
+      | 'asc'
+      | 'desc';
     const skip = (page - 1) * limit;
-    
+
     // Build query
     const query: Record<string, unknown> = {};
 
@@ -188,9 +193,10 @@ export async function GET(request: Request) {
 
     if (filterStatus) query.statut = { $regex: filterStatus, $options: 'i' };
     if (filterVille) query.ville = { $regex: filterVille, $options: 'i' };
-    if (filterFinancement) query.financement = { $regex: filterFinancement, $options: 'i' };
+    if (filterFinancement)
+      query.financement = { $regex: filterFinancement, $options: 'i' };
     if (clientId) query.clientId = clientId;
-    
+
     // Date range filter
     if (filterDateFrom || filterDateTo) {
       const dateQuery: Record<string, string> = {};
@@ -218,15 +224,15 @@ export async function GET(request: Request) {
           {
             $group: {
               _id: { client: '$client', financement: '$financement' },
-              doc: { $first: '$$ROOT' }
-            }
+              doc: { $first: '$$ROOT' },
+            },
           },
           {
-            $replaceRoot: { newRoot: '$doc' }
+            $replaceRoot: { newRoot: '$doc' },
           },
           { $sort: { [sortKey]: sortDir === 'asc' ? 1 : -1 } },
           { $skip: skip },
-          { $limit: limit }
+          { $limit: limit },
         ]);
 
         // Pour le total, on compte les clientId distincts
@@ -234,14 +240,16 @@ export async function GET(request: Request) {
           { $match: query },
           {
             $group: {
-              _id: { client: '$client', financement: '$financement' }
-            }
+              _id: { client: '$client', financement: '$financement' },
+            },
           },
-          { $count: 'total' }
+          { $count: 'total' },
         ]);
 
         totalCount = countAggregation[0]?.total || 0;
-        allClients = aggregation.map((doc) => mapImportedFields(doc as MappedClient));
+        allClients = aggregation.map((doc) =>
+          mapImportedFields(doc as MappedClient)
+        );
       } else {
         totalCount = await Model.countDocuments(query);
 
@@ -352,7 +360,9 @@ export async function POST(request: Request) {
         '';
 
       // Générer un clientId unique si non fourni
-      const clientId = data.clientId || `CLI-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+      const clientId =
+        data.clientId ||
+        `CLI-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
       const createPayload = {
         ...data,
@@ -376,7 +386,7 @@ export async function POST(request: Request) {
       ) {
         try {
           const installationPayload = {
-            ...data,
+            ...createPayload,
             section: 'installation',
             dateEstimative: '', // Vider la date de pose lors du passage en Installation
             stages: {
