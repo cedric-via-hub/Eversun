@@ -41,7 +41,7 @@ export default function RootLayout({
       <body
         className={
           inter.className +
-          ' bg-pattern-subtle min-h-screen transition-colors duration-150'
+          ' bg-pattern-subtle min-h-screen transition-colors duration-100 ease-in-out'
         }
       >
         <a

@@ -9,7 +9,7 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="relative p-2 rounded-lg hover:bg-secondary transition-all duration-200 hover:scale-[1.01] group border border-transparent hover:border-primary"
+      className="relative p-2 rounded-lg hover:bg-secondary transition-colors duration-150 ease-in-out hover:scale-[1.01] group border border-transparent hover:border-primary"
       aria-label={
         theme === 'light' ? 'Activer le mode sombre' : 'Activer le mode clair'
       }

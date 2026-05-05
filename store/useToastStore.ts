@@ -19,7 +19,6 @@ interface Toast {
   message: string;
   /** Durée d'affichage en millisecondes (défaut: 3000ms, 0 = permanent) */
   duration?: number;
-
 }
 
 /**
@@ -43,14 +42,7 @@ export const useToastStore = create<ToastStore>((set) => ({
     const id = Math.random().toString(36).substring(7);
     const toast: Toast = { id, type, message, duration };
 
-
     set((state) => ({ toasts: [...state.toasts, toast] }));
-
-    if (duration > 0) {
-      setTimeout(() => {
-        set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }));
-      }, duration);
-    }
 
     return id;
   },

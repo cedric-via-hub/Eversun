@@ -13,7 +13,7 @@ import { useAppStore } from '@/store/useAppStore';
 export const clientKeys = {
   all: ['clients'] as const,
   lists: () => [...clientKeys.all, 'list'] as const,
-  list: (filters: Record<string, unknown>) => 
+  list: (filters: Record<string, unknown>) =>
     [...clientKeys.lists(), filters] as const,
   counts: () => [...clientKeys.all, 'counts'] as const,
   detail: (id: string) => [...clientKeys.all, 'detail', id] as const,
@@ -78,8 +78,9 @@ export function useClientCounts() {
   const query = useQuery({
     queryKey: clientKeys.counts(),
     queryFn: clientApi.getCounts,
-    staleTime: 10 * 1000, // 10 seconds
-    refetchInterval: 30 * 1000, // Auto-refresh every 30 seconds
+    staleTime: 5 * 1000, // 5 seconds
+    refetchInterval: 10 * 1000, // Auto-refresh every 10 seconds
+    refetchOnWindowFocus: true,
     gcTime: 5 * 60 * 1000, // 5 minutes
   });
 

@@ -140,7 +140,8 @@ export default function ClientSection({ section }: ClientSectionProps) {
       const existingRes = await fetch(`/api/clients?section=raccordement&clientId=${encodeURIComponent(clientId)}`);
       if (existingRes.ok) {
         const existingData = await existingRes.json();
-        const existingClients = existingData.data || existingData;
+        const existingClients =
+          existingData.clients || existingData.data || existingData;
         if (Array.isArray(existingClients) && existingClients.length > 0) {
           // Une copie existe déjà, ne pas créer de doublon
           return;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   User,
@@ -26,6 +26,7 @@ import {
 import { ClientRecord } from '@/types/client';
 import { formatDateFR } from '@/lib/clientTableUtils';
 import { toast } from '@/store/useToastStore';
+import type { UploadedFile } from '@/components/ui/FileUpload';
 
 interface ClientModalProps {
   selectedClient: ClientRecord | null;
@@ -37,20 +38,65 @@ interface ClientModalProps {
   setShowPassword: (show: boolean) => void;
 }
 
-const sectionColors: Record<string, { bg: string; text: string; gradient: string }> = {
-  'dp-en-cours': { bg: 'bg-amber-500', text: 'text-amber-600', gradient: 'from-amber-500 to-orange-500' },
-  'dp-accordes': { bg: 'bg-emerald-500', text: 'text-emerald-600', gradient: 'from-emerald-500 to-teal-500' },
-  'dp-refuses': { bg: 'bg-rose-500', text: 'text-rose-600', gradient: 'from-rose-500 to-pink-500' },
-  'daact': { bg: 'bg-violet-500', text: 'text-violet-600', gradient: 'from-violet-500 to-purple-500' },
-  'installation': { bg: 'bg-cyan-500', text: 'text-cyan-600', gradient: 'from-cyan-500 to-blue-500' },
-  'consuel-en-cours': { bg: 'bg-amber-500', text: 'text-amber-600', gradient: 'from-amber-500 to-orange-500' },
-  'consuel-finalise': { bg: 'bg-emerald-500', text: 'text-emerald-600', gradient: 'from-emerald-500 to-teal-500' },
-  'raccordement': { bg: 'bg-blue-500', text: 'text-blue-600', gradient: 'from-blue-500 to-indigo-500' },
-  'raccordement-mes': { bg: 'bg-emerald-500', text: 'text-emerald-600', gradient: 'from-emerald-500 to-teal-500' },
+const sectionColors: Record<
+  string,
+  { bg: string; text: string; gradient: string }
+> = {
+  'dp-en-cours': {
+    bg: 'bg-amber-500',
+    text: 'text-amber-600',
+    gradient: 'from-amber-500 to-orange-500',
+  },
+  'dp-accordes': {
+    bg: 'bg-emerald-500',
+    text: 'text-emerald-600',
+    gradient: 'from-emerald-500 to-teal-500',
+  },
+  'dp-refuses': {
+    bg: 'bg-rose-500',
+    text: 'text-rose-600',
+    gradient: 'from-rose-500 to-pink-500',
+  },
+  daact: {
+    bg: 'bg-violet-500',
+    text: 'text-violet-600',
+    gradient: 'from-violet-500 to-purple-500',
+  },
+  installation: {
+    bg: 'bg-cyan-500',
+    text: 'text-cyan-600',
+    gradient: 'from-cyan-500 to-blue-500',
+  },
+  'consuel-en-cours': {
+    bg: 'bg-amber-500',
+    text: 'text-amber-600',
+    gradient: 'from-amber-500 to-orange-500',
+  },
+  'consuel-finalise': {
+    bg: 'bg-emerald-500',
+    text: 'text-emerald-600',
+    gradient: 'from-emerald-500 to-teal-500',
+  },
+  raccordement: {
+    bg: 'bg-blue-500',
+    text: 'text-blue-600',
+    gradient: 'from-blue-500 to-indigo-500',
+  },
+  'raccordement-mes': {
+    bg: 'bg-emerald-500',
+    text: 'text-emerald-600',
+    gradient: 'from-emerald-500 to-teal-500',
+  },
 };
 
 const getSectionColor = (section: string) => {
-  return sectionColors[section] || { bg: 'bg-slate-500', text: 'text-slate-600', gradient: 'from-slate-500 to-gray-500' };
+  return (
+    sectionColors[section] || {
+      bg: 'bg-slate-500',
+      text: 'text-slate-600',
+      gradient: 'from-slate-500 to-gray-500',
+    }
+  );
 };
 
 const getSectionLabel = (section: string) => {
@@ -58,11 +104,11 @@ const getSectionLabel = (section: string) => {
     'dp-en-cours': 'Déclaration Préalable - En cours',
     'dp-accordes': 'Déclaration Préalable - Accordée',
     'dp-refuses': 'Déclaration Préalable - Refusée',
-    'daact': 'DAACT',
-    'installation': 'Installation',
+    daact: 'DAACT',
+    installation: 'Installation',
     'consuel-en-cours': 'Consuel - En cours',
     'consuel-finalise': 'Consuel - Finalisé',
-    'raccordement': 'Raccordement',
+    raccordement: 'Raccordement',
     'raccordement-mes': 'Raccordement - MES',
   };
   return labels[section] || section;
@@ -79,6 +125,55 @@ export default function ClientModal({
 }: ClientModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const previousActiveElementRef = useRef<HTMLElement | null>(null);
+  const [clientFiles, setClientFiles] = useState<UploadedFile[]>([]);
+  const [loadingFiles, setLoadingFiles] = useState(false);
+  const [filesError, setFilesError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!selectedClient?.client) {
+      setClientFiles([]);
+      setFilesError(null);
+      setLoadingFiles(false);
+      return;
+    }
+
+    let mounted = true;
+    setLoadingFiles(true);
+    setFilesError(null);
+
+    fetch(`/api/files?clientName=${encodeURIComponent(selectedClient.client)}`)
+      .then(async (res) => {
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(
+            error?.error || 'Impossible de récupérer les fichiers'
+          );
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (!mounted) return;
+        const files = Array.isArray(data.files) ? data.files : [];
+        setClientFiles(files);
+      })
+      .catch((error) => {
+        if (!mounted) return;
+        console.error('Erreur de récupération des fichiers:', error);
+        setFilesError(
+          error instanceof Error
+            ? error.message
+            : 'Erreur lors du chargement des fichiers'
+        );
+        setClientFiles([]);
+      })
+      .finally(() => {
+        if (mounted) setLoadingFiles(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [selectedClient?.client]);
 
   useEffect(() => {
     if (!selectedClient) return;
@@ -110,18 +205,43 @@ export default function ClientModal({
     );
 
     if (diffDays < 0) {
-      return { label: 'En retard', color: 'text-rose-600 bg-rose-50 border-rose-200', urgent: true, diffDays };
+      return {
+        label: 'En retard',
+        color: 'text-rose-600 bg-rose-50 border-rose-200',
+        urgent: true,
+        diffDays,
+      };
     }
     if (diffDays === 0) {
-      return { label: "Aujourd'hui", color: 'text-red-600 bg-red-50 border-red-200', urgent: true, diffDays };
+      return {
+        label: "Aujourd'hui",
+        color: 'text-red-600 bg-red-50 border-red-200',
+        urgent: true,
+        diffDays,
+      };
     }
     if (diffDays <= 3) {
-      return { label: 'Urgent', color: 'text-orange-600 bg-orange-50 border-orange-200', urgent: true, diffDays };
+      return {
+        label: 'Urgent',
+        color: 'text-orange-600 bg-orange-50 border-orange-200',
+        urgent: true,
+        diffDays,
+      };
     }
     if (diffDays <= 7) {
-      return { label: 'Proche', color: 'text-amber-600 bg-amber-50 border-amber-200', urgent: false, diffDays };
+      return {
+        label: 'Proche',
+        color: 'text-amber-600 bg-amber-50 border-amber-200',
+        urgent: false,
+        diffDays,
+      };
     }
-    return { label: 'À venir', color: 'text-emerald-600 bg-emerald-50 border-emerald-200', urgent: false, diffDays };
+    return {
+      label: 'À venir',
+      color: 'text-emerald-600 bg-emerald-50 border-emerald-200',
+      urgent: false,
+      diffDays,
+    };
   };
 
   const urgency = getUrgencyInfo();
@@ -172,7 +292,9 @@ export default function ClientModal({
             aria-label={`Dossier ${selectedClient.client || 'client'}`}
           >
             {/* Modern Header with Gradient */}
-            <div className={`relative bg-gradient-to-r ${colors.gradient} p-5 text-white`}>
+            <div
+              className={`relative bg-gradient-to-r ${colors.gradient} p-5 text-white`}
+            >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center shadow-lg">
@@ -186,20 +308,36 @@ export default function ClientModal({
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/20 backdrop-blur text-white">
                         {getSectionLabel(section)}
                       </span>
-                      {(selectedClient.clientId || selectedClient._id || selectedClient.id) && (
+                      {(selectedClient.clientId ||
+                        selectedClient._id ||
+                        selectedClient.id) && (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/20 backdrop-blur text-white">
-                          N° Badge: {selectedClient.clientId || selectedClient._id || selectedClient.id}
+                          N° Badge:{' '}
+                          {selectedClient.clientId ||
+                            selectedClient._id ||
+                            selectedClient.id}
                         </span>
                       )}
-                      {selectedClient.statut && !section.startsWith('consuel') && (
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          selectedClient.statut.includes('Accord') ? 'bg-emerald-400/30 text-white' :
-                          selectedClient.statut.includes('Refus') ? 'bg-rose-400/30 text-white' :
-                          'bg-white/20 text-white'
-                        }`}>
-                          {selectedClient.statut}
+                      {(section === 'sunlib' || section === 'otovo') && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/20 backdrop-blur text-white">
+                          {clientFiles.length} fichier
+                          {clientFiles.length > 1 ? 's' : ''}
                         </span>
                       )}
+                      {selectedClient.statut &&
+                        !section.startsWith('consuel') && (
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              selectedClient.statut.includes('Accord')
+                                ? 'bg-emerald-400/30 text-white'
+                                : selectedClient.statut.includes('Refus')
+                                  ? 'bg-rose-400/30 text-white'
+                                  : 'bg-white/20 text-white'
+                            }`}
+                          >
+                            {selectedClient.statut}
+                          </span>
+                        )}
                     </div>
                   </div>
                 </div>
@@ -209,7 +347,10 @@ export default function ClientModal({
                     className="p-2.5 rounded-xl bg-white/10 backdrop-blur hover:bg-white/20 transition-all duration-200"
                     title="Modifier"
                   >
-                    <PencilSimple className="h-5 w-5 text-white" weight="bold" />
+                    <PencilSimple
+                      className="h-5 w-5 text-white"
+                      weight="bold"
+                    />
                   </button>
                   {onDelete && (
                     <button
@@ -232,12 +373,17 @@ export default function ClientModal({
 
               {/* Quick Info Chips */}
               <div className="flex flex-wrap items-center gap-3 mt-4">
-                {urgency && !section.startsWith('consuel') && section !== 'dp-refuses' && section !== 'dp-accordes' && (
-                  <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${urgency.color}`}>
-                    <Clock className="h-3.5 w-3.5" weight="bold" />
-                    {urgency.label} ({urgency.diffDays}j)
-                  </div>
-                )}
+                {urgency &&
+                  !section.startsWith('consuel') &&
+                  section !== 'dp-refuses' &&
+                  section !== 'dp-accordes' && (
+                    <div
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${urgency.color}`}
+                    >
+                      <Clock className="h-3.5 w-3.5" weight="bold" />
+                      {urgency.label} ({urgency.diffDays}j)
+                    </div>
+                  )}
                 {selectedClient.financement && (
                   <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-white/20 backdrop-blur text-white border border-white/30">
                     <Tag className="h-3.5 w-3.5" weight="bold" />
@@ -258,26 +404,34 @@ export default function ClientModal({
               <div className="p-5 space-y-4">
                 {/* KPI Cards - Modern Grid */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                  {selectedClient.dateEstimative && section !== 'consuel-finalise' && (
-                    <motion.div
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.1 }}
-                      className="bg-white dark:bg-slate-900 rounded-xl p-3 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow"
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className={`p-2 rounded-xl ${colors.bg} bg-opacity-10`}>
-                          <Calendar className={`h-4 w-4 ${colors.text}`} weight="bold" />
+                  {selectedClient.dateEstimative &&
+                    section !== 'consuel-finalise' && (
+                      <motion.div
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.1 }}
+                        className="bg-white dark:bg-slate-900 rounded-xl p-3 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <div
+                            className={`p-2 rounded-xl ${colors.bg} bg-opacity-10`}
+                          >
+                            <Calendar
+                              className={`h-4 w-4 ${colors.text}`}
+                              weight="bold"
+                            />
+                          </div>
+                          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                            {section === 'installation'
+                              ? 'Date de pose'
+                              : 'Date estimative'}
+                          </span>
                         </div>
-                        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                          {section === 'installation' ? 'Date de pose' : 'Date estimative'}
-                        </span>
-                      </div>
-                      <p className="text-lg font-bold text-slate-900 dark:text-white">
-                        {formatDateFR(selectedClient.dateEstimative)}
-                      </p>
-                    </motion.div>
-                  )}
+                        <p className="text-lg font-bold text-slate-900 dark:text-white">
+                          {formatDateFR(selectedClient.dateEstimative)}
+                        </p>
+                      </motion.div>
+                    )}
 
                   {selectedClient.dateEnvoi && (
                     <motion.div
@@ -288,9 +442,14 @@ export default function ClientModal({
                     >
                       <div className="flex items-center gap-2 mb-2">
                         <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-900/20">
-                          <ArrowRight className="h-4 w-4 text-blue-600" weight="bold" />
+                          <ArrowRight
+                            className="h-4 w-4 text-blue-600"
+                            weight="bold"
+                          />
                         </div>
-                        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Date d&apos;envoi</span>
+                        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                          Date d&apos;envoi
+                        </span>
                       </div>
                       <p className="text-lg font-bold text-slate-900 dark:text-white">
                         {formatDateFR(selectedClient.dateEnvoi)}
@@ -307,9 +466,14 @@ export default function ClientModal({
                     >
                       <div className="flex items-center gap-2 mb-2">
                         <div className="p-2 rounded-xl bg-violet-50 dark:bg-violet-900/20">
-                          <FileText className="h-4 w-4 text-violet-600" weight="bold" />
+                          <FileText
+                            className="h-4 w-4 text-violet-600"
+                            weight="bold"
+                          />
                         </div>
-                        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Numéro DP</span>
+                        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                          Numéro DP
+                        </span>
                       </div>
                       <p className="text-lg font-bold text-slate-900 dark:text-white truncate">
                         {selectedClient.noDp}
@@ -317,88 +481,131 @@ export default function ClientModal({
                     </motion.div>
                   )}
 
-                  {section.startsWith('consuel') && selectedClient.typeConsuel && (
-                    <motion.div
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.25 }}
-                      className="bg-white dark:bg-slate-900 rounded-xl p-3 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow"
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-900/20">
-                          <Lightning className="h-4 w-4 text-amber-600" weight="bold" />
+                  {section.startsWith('consuel') &&
+                    selectedClient.typeConsuel && (
+                      <motion.div
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.25 }}
+                        className="bg-white dark:bg-slate-900 rounded-xl p-3 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-900/20">
+                            <Lightning
+                              className="h-4 w-4 text-amber-600"
+                              weight="bold"
+                            />
+                          </div>
+                          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                            Type Consuel
+                          </span>
                         </div>
-                        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Type Consuel</span>
-                      </div>
-                      <p className="text-lg font-bold text-slate-900 dark:text-white">
-                        {selectedClient.typeConsuel}
-                      </p>
-                    </motion.div>
-                  )}
+                        <p className="text-lg font-bold text-slate-900 dark:text-white">
+                          {selectedClient.typeConsuel}
+                        </p>
+                      </motion.div>
+                    )}
                 </div>
 
                 {/* Portal Credentials Section */}
-                {section.startsWith('dp') && section !== 'dp-accordes' && section !== 'dp-refuses' && (
-                  <motion.div
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                    className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden"
-                  >
-                    <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
-                      <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                        <Key className="h-4 w-4 text-slate-500" weight="bold" />
-                        Identifiants Portail
-                      </h3>
-                    </div>
-                    <div className="p-4">
-                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-                        {selectedClient.portail && (
-                          <div className="group">
-                            <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">Portail</label>
-                            <div className="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-                              <Buildings className="h-4 w-4 text-slate-400" weight="bold" />
-                              <span className="text-sm font-medium text-slate-900 dark:text-white">{selectedClient.portail}</span>
+                {section.startsWith('dp') &&
+                  section !== 'dp-accordes' &&
+                  section !== 'dp-refuses' && (
+                    <motion.div
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.3 }}
+                      className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden"
+                    >
+                      <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
+                        <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                          <Key
+                            className="h-4 w-4 text-slate-500"
+                            weight="bold"
+                          />
+                          Identifiants Portail
+                        </h3>
+                      </div>
+                      <div className="p-4">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                          {selectedClient.portail && (
+                            <div className="group">
+                              <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">
+                                Portail
+                              </label>
+                              <div className="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                                <Buildings
+                                  className="h-4 w-4 text-slate-400"
+                                  weight="bold"
+                                />
+                                <span className="text-sm font-medium text-slate-900 dark:text-white">
+                                  {selectedClient.portail}
+                                </span>
+                              </div>
                             </div>
-                          </div>
-                        )}
-                        {selectedClient.identifiant && (
-                          <div className="group">
-                            <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">Identifiant</label>
-                            <button
-                              onClick={() => copyToClipboard(selectedClient.identifiant!, 'Identifiant')}
-                              className="w-full flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
-                            >
-                              <User className="h-4 w-4 text-slate-400" weight="bold" />
-                              <span className="text-sm font-medium text-slate-900 dark:text-white truncate">{selectedClient.identifiant}</span>
-                            </button>
-                          </div>
-                        )}
-                        {selectedClient.motDePasse && (
-                          <div className="group">
-                            <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">Mot de passe</label>
-                            <div className="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-                              <Key className="h-4 w-4 text-slate-400" weight="bold" />
-                              <span className="text-sm font-medium text-slate-900 dark:text-white flex-1">
-                                {showPassword ? selectedClient.motDePasse : '••••••••'}
-                              </span>
+                          )}
+                          {selectedClient.identifiant && (
+                            <div className="group">
+                              <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">
+                                Identifiant
+                              </label>
                               <button
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                                onClick={() =>
+                                  copyToClipboard(
+                                    selectedClient.identifiant!,
+                                    'Identifiant'
+                                  )
+                                }
+                                className="w-full flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
                               >
-                                {showPassword ? (
-                                  <EyeSlash className="h-4 w-4 text-slate-500" weight="bold" />
-                                ) : (
-                                  <Eye className="h-4 w-4 text-slate-500" weight="bold" />
-                                )}
+                                <User
+                                  className="h-4 w-4 text-slate-400"
+                                  weight="bold"
+                                />
+                                <span className="text-sm font-medium text-slate-900 dark:text-white truncate">
+                                  {selectedClient.identifiant}
+                                </span>
                               </button>
                             </div>
-                          </div>
-                        )}
+                          )}
+                          {selectedClient.motDePasse && (
+                            <div className="group">
+                              <label className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">
+                                Mot de passe
+                              </label>
+                              <div className="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                                <Key
+                                  className="h-4 w-4 text-slate-400"
+                                  weight="bold"
+                                />
+                                <span className="text-sm font-medium text-slate-900 dark:text-white flex-1">
+                                  {showPassword
+                                    ? selectedClient.motDePasse
+                                    : '••••••••'}
+                                </span>
+                                <button
+                                  onClick={() => setShowPassword(!showPassword)}
+                                  className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                                >
+                                  {showPassword ? (
+                                    <EyeSlash
+                                      className="h-4 w-4 text-slate-500"
+                                      weight="bold"
+                                    />
+                                  ) : (
+                                    <Eye
+                                      className="h-4 w-4 text-slate-500"
+                                      weight="bold"
+                                    />
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </motion.div>
-                )}
+                    </motion.div>
+                  )}
 
                 {/* Consuel Section */}
                 {section.startsWith('consuel') && (
@@ -410,7 +617,10 @@ export default function ClientModal({
                   >
                     <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
                       <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                        <Lightning className="h-4 w-4 text-amber-500" weight="bold" />
+                        <Lightning
+                          className="h-4 w-4 text-amber-500"
+                          weight="bold"
+                        />
                         Informations Consuel
                       </h3>
                     </div>
@@ -419,44 +629,74 @@ export default function ClientModal({
                         {selectedClient.pvChantierDate && (
                           <div className="flex items-center gap-2.5 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
                             <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
-                              <CheckCircle className="h-4 w-4 text-emerald-600" weight="bold" />
+                              <CheckCircle
+                                className="h-4 w-4 text-emerald-600"
+                                weight="bold"
+                              />
                             </div>
                             <div>
-                              <p className="text-xs text-slate-500 dark:text-slate-400">PV Chantier</p>
-                              <p className="text-sm font-semibold text-slate-900 dark:text-white">{formatDateFR(selectedClient.pvChantierDate)}</p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400">
+                                PV Chantier
+                              </p>
+                              <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                                {formatDateFR(selectedClient.pvChantierDate)}
+                              </p>
                             </div>
                           </div>
                         )}
                         {selectedClient.statut && (
                           <div className="flex items-center gap-2.5 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
                             <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                              <Flag className="h-4 w-4 text-blue-600" weight="bold" />
+                              <Flag
+                                className="h-4 w-4 text-blue-600"
+                                weight="bold"
+                              />
                             </div>
                             <div>
-                              <p className="text-xs text-slate-500 dark:text-slate-400">Statut</p>
-                              <p className="text-sm font-semibold text-slate-900 dark:text-white">{selectedClient.statut}</p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400">
+                                Statut
+                              </p>
+                              <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                                {selectedClient.statut}
+                              </p>
                             </div>
                           </div>
                         )}
                         {selectedClient.typeConsuel && (
                           <div className="flex items-center gap-2.5 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
                             <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
-                              <Lightning className="h-4 w-4 text-amber-600" weight="bold" />
+                              <Lightning
+                                className="h-4 w-4 text-amber-600"
+                                weight="bold"
+                              />
                             </div>
                             <div>
-                              <p className="text-xs text-slate-500 dark:text-slate-400">Type</p>
-                              <p className="text-sm font-semibold text-slate-900 dark:text-white">{selectedClient.typeConsuel}</p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400">
+                                Type
+                              </p>
+                              <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                                {selectedClient.typeConsuel}
+                              </p>
                             </div>
                           </div>
                         )}
                         {selectedClient.dateDerniereDemarche && (
                           <div className="flex items-center gap-2.5 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
                             <div className="p-2 bg-violet-100 dark:bg-violet-900/30 rounded-lg">
-                              <Calendar className="h-4 w-4 text-violet-600" weight="bold" />
+                              <Calendar
+                                className="h-4 w-4 text-violet-600"
+                                weight="bold"
+                              />
                             </div>
                             <div>
-                              <p className="text-xs text-slate-500 dark:text-slate-400">Dernière démarche</p>
-                              <p className="text-sm font-semibold text-slate-900 dark:text-white">{formatDateFR(selectedClient.dateDerniereDemarche)}</p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400">
+                                Dernière démarche
+                              </p>
+                              <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                                {formatDateFR(
+                                  selectedClient.dateDerniereDemarche
+                                )}
+                              </p>
                             </div>
                           </div>
                         )}
@@ -484,22 +724,36 @@ export default function ClientModal({
                         {selectedClient.typeConsuel && (
                           <div className="flex items-center gap-2.5 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
                             <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
-                              <Lightning className="h-4 w-4 text-amber-600" weight="bold" />
+                              <Lightning
+                                className="h-4 w-4 text-amber-600"
+                                weight="bold"
+                              />
                             </div>
                             <div>
-                              <p className="text-xs text-slate-500 dark:text-slate-400">Type de consuel</p>
-                              <p className="text-sm font-semibold text-slate-900 dark:text-white">{selectedClient.typeConsuel}</p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400">
+                                Type de consuel
+                              </p>
+                              <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                                {selectedClient.typeConsuel}
+                              </p>
                             </div>
                           </div>
                         )}
                         {selectedClient.statut && (
                           <div className="flex items-center gap-2.5 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
                             <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                              <Flag className="h-4 w-4 text-blue-600" weight="bold" />
+                              <Flag
+                                className="h-4 w-4 text-blue-600"
+                                weight="bold"
+                              />
                             </div>
                             <div>
-                              <p className="text-xs text-slate-500 dark:text-slate-400">Statut</p>
-                              <p className="text-sm font-semibold text-slate-900 dark:text-white">{selectedClient.statut}</p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400">
+                                Statut
+                              </p>
+                              <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                                {selectedClient.statut}
+                              </p>
                             </div>
                           </div>
                         )}
@@ -518,7 +772,10 @@ export default function ClientModal({
                   >
                     <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
                       <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                        <House className="h-4 w-4 text-emerald-500" weight="bold" />
+                        <House
+                          className="h-4 w-4 text-emerald-500"
+                          weight="bold"
+                        />
                         Mise en Service
                       </h3>
                     </div>
@@ -527,22 +784,36 @@ export default function ClientModal({
                         {selectedClient.numeroContrat && (
                           <div className="flex items-center gap-2.5 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
                             <div className="p-2 bg-violet-100 dark:bg-violet-900/30 rounded-lg">
-                              <FileText className="h-4 w-4 text-violet-600" weight="bold" />
+                              <FileText
+                                className="h-4 w-4 text-violet-600"
+                                weight="bold"
+                              />
                             </div>
                             <div>
-                              <p className="text-xs text-slate-500 dark:text-slate-400">Numéro de contrat</p>
-                              <p className="text-sm font-semibold text-slate-900 dark:text-white">{selectedClient.numeroContrat}</p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400">
+                                Numéro de contrat
+                              </p>
+                              <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                                {selectedClient.numeroContrat}
+                              </p>
                             </div>
                           </div>
                         )}
                         {selectedClient.dateMiseEnService && (
                           <div className="flex items-center gap-2.5 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
                             <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
-                              <Calendar className="h-4 w-4 text-emerald-600" weight="bold" />
+                              <Calendar
+                                className="h-4 w-4 text-emerald-600"
+                                weight="bold"
+                              />
                             </div>
                             <div>
-                              <p className="text-xs text-slate-500 dark:text-slate-400">Date de MES</p>
-                              <p className="text-sm font-semibold text-slate-900 dark:text-white">{formatDateFR(selectedClient.dateMiseEnService)}</p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400">
+                                Date de MES
+                              </p>
+                              <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                                {formatDateFR(selectedClient.dateMiseEnService)}
+                              </p>
                             </div>
                           </div>
                         )}
@@ -552,25 +823,101 @@ export default function ClientModal({
                 )}
 
                 {/* Comments Section */}
-                {(section.startsWith('consuel') || section === 'raccordement' || section === 'raccordement-mes') && selectedClient.commentaires && (
+                {(section.startsWith('consuel') ||
+                  section === 'raccordement' ||
+                  section === 'raccordement-mes') &&
+                  selectedClient.commentaires && (
+                    <motion.div
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.45 }}
+                      className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden"
+                    >
+                      <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
+                        <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                          <ChatCircle
+                            className="h-4 w-4 text-slate-500"
+                            weight="bold"
+                          />
+                          Commentaires
+                        </h3>
+                      </div>
+                      <div className="p-4">
+                        <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                          <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
+                            {selectedClient.commentaires}
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                {(section === 'sunlib' || section === 'otovo') && (
                   <motion.div
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.45 }}
+                    transition={{ delay: 0.5 }}
                     className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden"
                   >
                     <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
-                      <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                        <ChatCircle className="h-4 w-4 text-slate-500" weight="bold" />
-                        Commentaires
-                      </h3>
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
+                          <FileText
+                            className="h-4 w-4 text-slate-500"
+                            weight="bold"
+                          />
+                          Fichiers attachés
+                        </div>
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-medium">
+                          {clientFiles.length} fichier
+                          {clientFiles.length > 1 ? 's' : ''}
+                        </span>
+                      </div>
                     </div>
                     <div className="p-4">
-                      <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
-                        <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
-                          {selectedClient.commentaires}
-                        </p>
-                      </div>
+                      {loadingFiles ? (
+                        <div className="text-sm text-slate-600 dark:text-slate-300">
+                          Chargement des fichiers...
+                        </div>
+                      ) : filesError ? (
+                        <div className="text-sm text-rose-600 dark:text-rose-300">
+                          {filesError}
+                        </div>
+                      ) : clientFiles.length === 0 ? (
+                        <div className="text-sm text-slate-600 dark:text-slate-300">
+                          Aucun fichier associé à ce client.
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {clientFiles.map((file) => (
+                            <a
+                              key={file.id}
+                              href={file.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="group block rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40 p-4 transition hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800"
+                            >
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                                    {file.name}
+                                  </p>
+                                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                                    {new Date(
+                                      file.uploadedAt
+                                    ).toLocaleDateString('fr-FR')}{' '}
+                                    · {Math.round(file.size / 1024)} KB
+                                  </p>
+                                </div>
+                                <ArrowRight
+                                  className="h-4 w-4 text-slate-400 dark:text-slate-300 transition group-hover:text-slate-600 dark:group-hover:text-slate-100"
+                                  weight="bold"
+                                />
+                              </div>
+                            </a>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 )}
@@ -581,7 +928,10 @@ export default function ClientModal({
             <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
               <div className="flex items-center justify-between">
                 <div className="text-xs text-slate-400 dark:text-slate-500">
-                  ID: {selectedClient.clientId || selectedClient._id || selectedClient.id}
+                  ID:{' '}
+                  {selectedClient.clientId ||
+                    selectedClient._id ||
+                    selectedClient.id}
                 </div>
                 <button
                   onClick={onClose}

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { ArrowUUpLeft } from '@phosphor-icons/react';
 import { useUndoStore } from '@/store/useUndoStore';
 
@@ -9,10 +10,19 @@ interface UndoToastProps {
 
 export default function UndoToast({ onUndo }: UndoToastProps) {
   const { canUndo, undoStack } = useUndoStore();
+  const [visible, setVisible] = useState(true);
 
   if (!canUndo() || undoStack.length === 0) return null;
 
   const lastAction = undoStack[0];
+
+  useEffect(() => {
+    setVisible(true);
+    const timer = setTimeout(() => setVisible(false), 3000);
+    return () => clearTimeout(timer);
+  }, [lastAction?.id]);
+
+  if (!visible) return null;
 
   return (
     <div className="flex items-center gap-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg p-3 animate-slide-in">
