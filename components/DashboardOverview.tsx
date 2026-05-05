@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, memo } from 'react';
 import { ClientRecord } from '@/types/client';
+import { parseJsonSafe } from '@/lib/utils';
 import {
   FileText,
   Lightning,
@@ -132,9 +133,9 @@ function DashboardOverview() {
 
   useEffect(() => {
     fetch('/api/clients?limit=10000')
-      .then((res) => res.json())
+      .then((res) => parseJsonSafe(res))
       .then((response) => {
-        const data = response.data || response;
+        const data = (response as any)?.data || response;
         setClients(Array.isArray(data) ? data : []);
         setLoading(false);
 

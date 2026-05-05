@@ -8,7 +8,8 @@ import DatePicker from '@/components/ui/DatePicker';
 import Select from '@/components/ui/Select';
 import AutocompleteInput from '@/components/ui/AutocompleteInput';
 import Badge from '@/components/ui/Badge';
-import { cn } from '@/lib/utils';
+import FileUpload, { type UploadedFile } from '@/components/ui/FileUpload';
+import { cn, parseJsonSafe } from '@/lib/utils';
 import { useFormValidation } from '@/hooks/useFormValidation';
 import { useClientTemplates } from '@/hooks/useClientTemplates';
 import {
@@ -120,6 +121,9 @@ export default function ClientForm({
   const [dpAccordesData, setDpAccordesData] = useState<
     Record<string, { noDp: string; ville: string }>
   >({});
+  const [uploadedFilesBySection, setUploadedFilesBySection] = useState<
+    Record<string, UploadedFile[]>
+  >({});
   const modalRef = useRef<HTMLDivElement>(null);
   const previousActiveElementRef = useRef<HTMLElement | null>(null);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout>();
@@ -200,6 +204,63 @@ export default function ClientForm({
         );
     }
   }, [section]);
+
+  const isDp = section.startsWith('dp');
+  const isInstallation = section === 'installation';
+  const isConsuel = section.startsWith('consuel');
+  const isRaccordement = section === 'raccordement';
+  const isRaccordementMes = section === 'raccordement-mes';
+  const isDaact = section === 'daact';
+  const isSunlibOrOtovo = section === 'sunlib' || section === 'otovo';
+
+  useEffect(() => {
+    if (!isSunlibOrOtovo || !form.client) {
+      setUploadedFilesBySection({});
+      return;
+    }
+
+    let mounted = true;
+    fetch(`/api/files?clientName=${encodeURIComponent(form.client)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!mounted) return;
+        const files = Array.isArray(data.files) ? (data.files as UploadedFile[]) : [];
+        const grouped = files.reduce<Record<string, UploadedFile[]>>((acc, file) => {
+          const sectionKey = file.section || 'unknown';
+          acc[sectionKey] = [...(acc[sectionKey] || []), file];
+          return acc;
+        }, {});
+        setUploadedFilesBySection(grouped);
+      })
+      .catch(() => {
+        if (mounted) {
+          setUploadedFilesBySection({});
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [form.client, isSunlibOrOtovo]);
+
+  const handleUploadedFiles = (sectionKey: string, files: UploadedFile[]) => {
+    setUploadedFilesBySection((prev) => ({
+      ...prev,
+      [sectionKey]: [...(prev[sectionKey] || []), ...files],
+    }));
+  };
+
+  const statutOptions = isDp
+    ? dpStatuts.map((s) => ({ value: s, label: s }))
+    : isInstallation
+      ? installationStatuts.map((s) => ({ value: s, label: s }))
+      : isConsuel
+        ? consuelStatuts.map((s) => ({ value: s, label: s }))
+        : isRaccordement
+          ? raccordementStatuts.map((s) => ({ value: s, label: s }))
+          : isDaact
+            ? daactStatuts.map((s) => ({ value: s, label: s }))
+            : [];
 
   useEffect(() => {
     if (!isEditing) {
@@ -440,24 +501,6 @@ export default function ClientForm({
     }
   };
 
-  const isDp = section.startsWith('dp');
-  const isInstallation = section === 'installation';
-  const isConsuel = section.startsWith('consuel');
-  const isRaccordement = section === 'raccordement';
-  const isRaccordementMes = section === 'raccordement-mes';
-  const isDaact = section === 'daact';
-
-  const statutOptions = isDp
-    ? dpStatuts.map((s) => ({ value: s, label: s }))
-    : isInstallation
-      ? installationStatuts.map((s) => ({ value: s, label: s }))
-      : isConsuel
-        ? consuelStatuts.map((s) => ({ value: s, label: s }))
-        : isRaccordement
-          ? raccordementStatuts.map((s) => ({ value: s, label: s }))
-          : isDaact
-            ? daactStatuts.map((s) => ({ value: s, label: s }))
-            : [];
   const financementOptionsList = financementOptions.map((f) => ({
     value: f,
     label: f,
@@ -601,10 +644,11 @@ export default function ClientForm({
               )}
 
             {!isDaact && (
-              <div
-                id="form-general"
-                className="bg-slate-50 dark:bg-slate-800/30 rounded-lg p-4 border border-slate-200 dark:border-slate-700"
-              >
+              <>
+                <div
+                  id="form-general"
+                  className="bg-slate-50 dark:bg-slate-800/30 rounded-lg p-4 border border-slate-200 dark:border-slate-700"
+                >
                 <h3 className="text-xs font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                   <div className="p-1.5 rounded-md bg-slate-600 dark:bg-slate-600 text-white">
                     <User className="h-3 w-3" weight="bold" />
@@ -651,6 +695,74 @@ export default function ClientForm({
                   )}
                 </div>
               </div>
+
+              {isSunlibOrOtovo && (
+                <div
+                  id="form-uploads"
+                  className="bg-slate-50 dark:bg-slate-800/30 rounded-lg p-4 border border-slate-200 dark:border-slate-700"
+                >
+                  <h3 className="text-xs font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                    <div className="p-1.5 rounded-md bg-slate-600 dark:bg-slate-600 text-white">
+                      <FileText className="h-3 w-3" weight="bold" />
+                    </div>
+                    Fichiers Sunlib / Otovo
+                  </h3>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-3">
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <p className="text-xs font-semibold text-slate-900 dark:text-white">
+                            Fichier pour DP
+                          </p>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                            Envoyer un fichier directement vers la section DP
+                          </p>
+                        </div>
+                        {!form.client && (
+                          <span className="text-[11px] text-amber-600 dark:text-amber-400">
+                            Renseignez le client avant d&apos;uploader
+                          </span>
+                        )}
+                      </div>
+                      <FileUpload
+                        clientName={form.client}
+                        section="dp-en-cours"
+                        inputId="file-upload-dp"
+                        disabled={!form.client}
+                        initialUploadedFiles={uploadedFilesBySection['dp-en-cours'] ?? []}
+                        onUploadComplete={(files) => handleUploadedFiles('dp-en-cours', files)}
+                      />
+                    </div>
+
+                    <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-3">
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <p className="text-xs font-semibold text-slate-900 dark:text-white">
+                            Fichier pour Consuel
+                          </p>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                            Envoyer un fichier directement vers la section Consuel
+                          </p>
+                        </div>
+                        {!form.client && (
+                          <span className="text-[11px] text-amber-600 dark:text-amber-400">
+                            Renseignez le client avant d&apos;uploader
+                          </span>
+                        )}
+                      </div>
+                      <FileUpload
+                        clientName={form.client}
+                        section="consuel-en-cours"
+                        inputId="file-upload-consuel"
+                        disabled={!form.client}
+                        initialUploadedFiles={uploadedFilesBySection['consuel-en-cours'] ?? []}
+                        onUploadComplete={(files) => handleUploadedFiles('consuel-en-cours', files)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
             )}
 
             {isDp && (

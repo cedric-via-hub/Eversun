@@ -21,7 +21,7 @@ import {
   Circle,
 } from '@phosphor-icons/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import { cn, parseJsonSafe } from '@/lib/utils';
 import { useAppStore } from '@/store/useAppStore';
 
 interface ClientStage {
@@ -117,8 +117,8 @@ export default function ClientAggregationView() {
   const fetchSectionCounts = async () => {
     try {
       const res = await fetch('/api/clients/counts');
-      const response = await res.json();
-      if (response.counts) {
+      const response = (await parseJsonSafe(res)) || {};
+      if ((response as any).counts) {
         setSectionCounts(response.counts);
       }
     } catch (error) {
@@ -148,8 +148,8 @@ export default function ClientAggregationView() {
     setLoading(true);
     try {
       const res = await fetch('/api/clients/sync');
-      const response = await res.json();
-      const data = response.data || response;
+      const response = (await parseJsonSafe(res)) || {};
+      const data = (response as any).data || response;
 
       if (Array.isArray(data)) {
         const aggregatedClients: AggregatedClient[] = data.map((item: any) => ({

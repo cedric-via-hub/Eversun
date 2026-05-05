@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, memo } from 'react';
+import { parseJsonSafe } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import {
   FileText,
@@ -92,8 +93,8 @@ export function HomeContent() {
 
   useEffect(() => {
     fetch('/api/clients/counts')
-      .then(res => res.json())
-      .then(data => setCounts(data.counts || {}))
+      .then((res) => parseJsonSafe(res))
+      .then((data) => setCounts((data as any)?.counts || {}))
       .catch(() => setCounts({}));
   }, []);
 

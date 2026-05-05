@@ -184,10 +184,12 @@ export async function GET(request: Request) {
     const filterFinancement = url.searchParams.get('filter_financement');
     const filterDateFrom = url.searchParams.get('filter_dateFrom');
     const filterDateTo = url.searchParams.get('filter_dateTo');
+    const clientId = url.searchParams.get('clientId');
 
     if (filterStatus) query.statut = { $regex: filterStatus, $options: 'i' };
     if (filterVille) query.ville = { $regex: filterVille, $options: 'i' };
     if (filterFinancement) query.financement = { $regex: filterFinancement, $options: 'i' };
+    if (clientId) query.clientId = clientId;
     
     // Date range filter
     if (filterDateFrom || filterDateTo) {

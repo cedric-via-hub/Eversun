@@ -4,6 +4,7 @@
  */
 
 import { ClientRecord } from '@/types/client';
+import { parseJsonSafe } from '@/lib/utils';
 
 const API_BASE = '';
 
@@ -21,12 +22,14 @@ async function fetchApi<T>(
     ...options,
   });
 
+  const parsed = await parseJsonSafe(response);
+
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+    const error = (parsed as any) || { error: 'Unknown error' };
     throw new Error(error.error || `HTTP ${response.status}: ${response.statusText}`);
   }
 
-  return response.json();
+  return parsed as T;
 }
 
 // Client API endpoints

@@ -21,6 +21,7 @@ import {
   ArrowsClockwise,
 } from '@phosphor-icons/react';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { parseJsonSafe } from '@/lib/utils';
 
 const exportSections = [
   {
@@ -222,7 +223,7 @@ export default function ParametersView() {
         body: formData,
       });
 
-      const result = await response.json();
+      const result = (await parseJsonSafe(response)) || {};
 
       if (response.ok) {
         setMessage({

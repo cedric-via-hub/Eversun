@@ -125,11 +125,13 @@ function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: ext
 
     if (section === 'sunlib' || section === 'otovo') {
       cols.push(
+        { key: 'clientId', label: 'N° Badge' },
         { key: 'client', label: 'Client' },
         { key: 'ville', label: 'Ville' }
       );
     } else if (isDp) {
       cols.push(
+        { key: 'clientId', label: 'N° Badge' },
         { key: 'client', label: 'Client' },
         { key: 'dateEnvoi', label: "Date d'envoi" },
         { key: 'dateEstimative', label: 'Date estimative' },
@@ -145,6 +147,7 @@ function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: ext
       }
     } else if (section === 'daact') {
       cols.push(
+        { key: 'clientId', label: 'N° Badge' },
         { key: 'client', label: 'Client' },
         { key: 'dateEnvoi', label: "Date d'envoi" },
         { key: 'statut', label: 'Statut' },
@@ -152,6 +155,7 @@ function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: ext
       );
     } else if (section === 'installation') {
       cols.push(
+        { key: 'clientId', label: 'N° Badge' },
         { key: 'client', label: 'Client' },
         { key: 'dateEstimative', label: 'Date de pose prévu' },
         { key: 'statut', label: 'Statut' },
@@ -159,6 +163,7 @@ function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: ext
       );
     } else if (isConsuel) {
       cols.push(
+        { key: 'clientId', label: 'N° Badge' },
         { key: 'client', label: 'Client' },
         { key: 'dateEnvoi', label: "Date d'envoi" },
         { key: 'statut', label: 'Statut' },
@@ -167,7 +172,9 @@ function ClientTableNew({ section, onEdit, onDelete, onRefresh, searchQuery: ext
       );
     } else if (isRaccordement) {
       cols.push(
+        { key: 'clientId', label: 'N° Badge' },
         { key: 'client', label: 'Client' },
+        { key: 'statut', label: 'Statut' },
         { key: 'numeroContrat', label: 'N° Contrat' },
         { key: 'dateMiseEnService', label: 'Date MES' },
         { key: 'commentaires', label: 'Commentaires' }

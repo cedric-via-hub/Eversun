@@ -298,45 +298,43 @@ export async function PUT(
       }
     }
 
-    if (
-      updated.section === 'raccordement' &&
-      (data.raccordement === 'Mise en service' ||
-        updated.raccordement === 'Mise en service')
-    ) {
-      try {
-        const query: Record<string, unknown> = {
-          section: 'raccordement-mes',
-        };
-        if (clientId) {
-          query.clientId = clientId;
-        } else {
-          query.client = (existing as ExistingDocument).client;
-        }
+    // Nettoyer les doublons dans toutes les sections
+    try {
+      const sections = [
+        'dp-en-cours',
+        'dp-accordes',
+        'dp-refuses',
+        'installation',
+        'daact',
+        'consuel-en-cours',
+        'consuel-finalise',
+        'raccordement',
+        'raccordement-mes',
+      ];
 
-        const existingInMes = await Model.findOne(query).lean();
-        if (!existingInMes) {
-          const mesPayload = {
-            ...updated.toObject(),
-            _id: undefined,
-            section: 'raccordement-mes',
-            statut: updated.statut || updated.raccordement || 'Mise en service',
-            dateMiseEnService:
-              updated.dateMiseEnService || new Date().toISOString(),
-            stages: {
-              ...updated.stages,
-              'raccordement-mes': {
-                statut: updated.statut || updated.raccordement || 'Mise en service',
-                date:
-                  updated.dateMiseEnService || new Date().toISOString(),
-                updatedAt: new Date(),
-              },
-            },
-          };
-          await Model.create(mesPayload);
+      for (const section of sections) {
+        // Trouver tous les documents dans cette section
+        const docs = await Model.find({ section }).sort({ updatedAt: -1 });
+
+        // Grouper par clientId ou client
+        const grouped: Record<string, any[]> = {};
+        docs.forEach((doc) => {
+          const key = doc.clientId || doc.client;
+          if (!grouped[key]) grouped[key] = [];
+          grouped[key].push(doc);
+        });
+
+        // Pour chaque groupe, garder seulement le plus récent, supprimer les autres
+        for (const key in grouped) {
+          const group = grouped[key];
+          if (group.length > 1) {
+            const toDelete = group.slice(1).map((d) => d._id);
+            await Model.deleteMany({ _id: { $in: toDelete } });
+          }
         }
-      } catch (copyError: unknown) {
-        console.error('Erreur lors de la copie vers Raccordement MES:', copyError);
       }
+    } catch (cleanupError: unknown) {
+      console.error('Erreur lors du nettoyage des doublons:', cleanupError);
     }
 
     return NextResponse.json(updated);
@@ -564,45 +562,43 @@ export async function PATCH(
       }
     }
 
-    if (
-      updated.section === 'raccordement' &&
-      (data.raccordement === 'Mise en service' ||
-        updated.raccordement === 'Mise en service')
-    ) {
-      try {
-        const query: Record<string, unknown> = {
-          section: 'raccordement-mes',
-        };
-        if (clientId) {
-          query.clientId = clientId;
-        } else {
-          query.client = (existing as ExistingDocument).client;
-        }
+    // Nettoyer les doublons dans toutes les sections
+    try {
+      const sections = [
+        'dp-en-cours',
+        'dp-accordes',
+        'dp-refuses',
+        'installation',
+        'daact',
+        'consuel-en-cours',
+        'consuel-finalise',
+        'raccordement',
+        'raccordement-mes',
+      ];
 
-        const existingInMes = await Model.findOne(query).lean();
-        if (!existingInMes) {
-          const mesPayload = {
-            ...updated.toObject(),
-            _id: undefined,
-            section: 'raccordement-mes',
-            statut: updated.statut || updated.raccordement || 'Mise en service',
-            dateMiseEnService:
-              updated.dateMiseEnService || new Date().toISOString(),
-            stages: {
-              ...updated.stages,
-              'raccordement-mes': {
-                statut: updated.statut || updated.raccordement || 'Mise en service',
-                date:
-                  updated.dateMiseEnService || new Date().toISOString(),
-                updatedAt: new Date(),
-              },
-            },
-          };
-          await Model.create(mesPayload);
+      for (const section of sections) {
+        // Trouver tous les documents dans cette section
+        const docs = await Model.find({ section }).sort({ updatedAt: -1 });
+
+        // Grouper par clientId ou client
+        const grouped: Record<string, any[]> = {};
+        docs.forEach((doc) => {
+          const key = doc.clientId || doc.client;
+          if (!grouped[key]) grouped[key] = [];
+          grouped[key].push(doc);
+        });
+
+        // Pour chaque groupe, garder seulement le plus récent, supprimer les autres
+        for (const key in grouped) {
+          const group = grouped[key];
+          if (group.length > 1) {
+            const toDelete = group.slice(1).map((d) => d._id);
+            await Model.deleteMany({ _id: { $in: toDelete } });
+          }
         }
-      } catch (copyError: unknown) {
-        console.error('Erreur lors de la copie vers Raccordement MES:', copyError);
       }
+    } catch (cleanupError: unknown) {
+      console.error('Erreur lors du nettoyage des doublons:', cleanupError);
     }
 
     return NextResponse.json(updated);

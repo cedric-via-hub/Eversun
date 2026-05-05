@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { CloudArrowUp, File, X, CheckCircle, WarningCircle } from '@phosphor-icons/react';
+import { parseJsonSafe } from '@/lib/utils';
 
 interface FileUploadProps {
   /** Callback quand les fichiers sont uploadés avec succès */
@@ -14,10 +15,17 @@ interface FileUploadProps {
   maxFiles?: number;
   /** Types de fichiers acceptés */
   accept?: string;
+  /** Liste initiale des fichiers déjà uploadés */
+  initialUploadedFiles?: UploadedFile[];
+  /** Désactive le composant quand le client n'est pas renseigné */
+  disabled?: boolean;
+  /** ID HTML pour l'input file */
+  inputId?: string;
 }
 
 export interface UploadedFile {
   id: string;
+  section?: string;
   name: string;
   url: string;
   size: number;
@@ -30,15 +38,23 @@ export default function FileUpload({
   section,
   maxFiles = 10,
   accept = '.pdf,.doc,.docx,.jpg,.jpeg,.png',
+  initialUploadedFiles = [],
+  disabled = false,
+  inputId = 'file-upload',
 }: FileUploadProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(initialUploadedFiles);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    setUploadedFiles(initialUploadedFiles);
+  }, [initialUploadedFiles]);
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return;
     const selectedFiles = Array.from(e.target.files || []);
     if (files.length + selectedFiles.length > maxFiles) {
       setError(`Maximum ${maxFiles} fichiers autorisés`);
@@ -58,6 +74,10 @@ export default function FileUpload({
   };
 
   const handleUpload = async () => {
+    if (disabled) {
+      setError('Veuillez renseigner le client avant d uploader un fichier.');
+      return;
+    }
     if (files.length === 0) {
       setError('Veuillez sélectionner au moins un fichier');
       return;
@@ -81,11 +101,11 @@ export default function FileUpload({
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Erreur lors de l\'upload');
+        const error = (await parseJsonSafe(response)) || { error: 'Erreur lors de l\'upload' };
+        throw new Error((error as any).error || 'Erreur lors de l\'upload');
       }
 
-      const result = await response.json();
+      const result = (await parseJsonSafe(response)) || {};
       setUploadedFiles((prev) => [...prev, ...result.files]);
       setFiles([]);
       onUploadComplete?.(result.files);
@@ -112,20 +132,20 @@ export default function FileUpload({
           <CloudArrowUp className="mx-auto h-12 w-12 text-gray-400 mb-3" />
           <div className="flex text-sm text-gray-600 dark:text-gray-400 justify-center">
             <label
-              htmlFor="file-upload"
-              className="relative cursor-pointer rounded-md bg-white dark:bg-gray-800 font-semibold text-primary hover:text-amber-600 dark:hover:text-amber-400 focus-within:outline-none focus-within:ring-2 focus-within:ring-amber-500 focus-within:ring-offset-2"
+              htmlFor={inputId}
+              className={`relative rounded-md bg-white dark:bg-gray-800 font-semibold text-primary focus-within:outline-none focus-within:ring-2 focus-within:ring-amber-500 focus-within:ring-offset-2 ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:text-amber-600 dark:hover:text-amber-400'}`}
             >
               <span>Télécharger des fichiers</span>
               <input
                 ref={fileInputRef}
-                id="file-upload"
-                name="file-upload"
+                id={inputId}
+                name={inputId}
                 type="file"
                 className="sr-only"
                 multiple
                 accept={accept}
                 onChange={handleFileSelect}
-                disabled={uploading}
+                disabled={disabled || uploading}
               />
             </label>
             <p className="pl-1">ou glisser-déposer</p>
@@ -145,7 +165,7 @@ export default function FileUpload({
             </h4>
             <button
               onClick={handleUpload}
-              disabled={uploading}
+              disabled={disabled || uploading}
               className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white shadow-sm hover:shadow transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {uploading ? (

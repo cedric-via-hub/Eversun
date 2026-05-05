@@ -182,10 +182,15 @@ export default function ClientModal({
                     <h2 className="text-2xl font-bold text-white truncate">
                       {selectedClient.client}
                     </h2>
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/20 backdrop-blur text-white">
                         {getSectionLabel(section)}
                       </span>
+                      {(selectedClient.clientId || selectedClient._id || selectedClient.id) && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/20 backdrop-blur text-white">
+                          N° Badge: {selectedClient.clientId || selectedClient._id || selectedClient.id}
+                        </span>
+                      )}
                       {selectedClient.statut && !section.startsWith('consuel') && (
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           selectedClient.statut.includes('Accord') ? 'bg-emerald-400/30 text-white' :

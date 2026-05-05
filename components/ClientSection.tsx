@@ -136,6 +136,17 @@ export default function ClientSection({ section }: ClientSectionProps) {
       // Générer un clientId si le client n'en a pas (clients existants avant la mise à jour)
       const clientId = record.clientId || `CLI-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
+      // Vérifier si une copie existe déjà dans Raccordement
+      const existingRes = await fetch(`/api/clients?section=raccordement&clientId=${encodeURIComponent(clientId)}`);
+      if (existingRes.ok) {
+        const existingData = await existingRes.json();
+        const existingClients = existingData.data || existingData;
+        if (Array.isArray(existingClients) && existingClients.length > 0) {
+          // Une copie existe déjà, ne pas créer de doublon
+          return;
+        }
+      }
+
       const raccordementRecord = {
         ...record,
         clientId,
@@ -467,7 +478,7 @@ export default function ClientSection({ section }: ClientSectionProps) {
         method: 'DELETE',
       });
       if (res.ok) {
-        toast.success(`${clientName || 'Client'} a été supprimé avec succès`, 5000);
+        toast.success(`${clientName || 'Client'} a été supprimé avec succès`, 3000);
         if (clientToDelete) {
           pushUndoAction({
             type: 'delete',

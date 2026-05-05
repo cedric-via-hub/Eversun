@@ -8,6 +8,8 @@ export type ToastType = 'success' | 'error' | 'warning' | 'info';
 /**
  * Interface représentant une notification toast
  */
+const DEFAULT_TOAST_DURATION = 3000;
+
 interface Toast {
   /** Identifiant unique du toast (généré automatiquement) */
   id: string;
@@ -37,7 +39,7 @@ interface ToastStore {
 
 export const useToastStore = create<ToastStore>((set) => ({
   toasts: [],
-  addToast: (type, message, duration = 3000) => {
+  addToast: (type, message, duration = DEFAULT_TOAST_DURATION) => {
     const id = Math.random().toString(36).substring(7);
     const toast: Toast = { id, type, message, duration };
 

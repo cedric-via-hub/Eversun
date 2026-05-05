@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
+import { parseJsonSafe } from '@/lib/utils';
 import { List, CaretUp } from '@phosphor-icons/react';
 import Sidebar from '@/components/Sidebar';
 import PageTransition from '@/components/PageTransition';
