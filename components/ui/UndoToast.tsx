@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { ArrowUUpLeft } from '@phosphor-icons/react';
-import { useEffect } from 'react';
 import { useUndoStore } from '@/store/useUndoStore';
 import { DEFAULT_TOAST_DURATION } from '@/store/useToastStore';
 
@@ -11,36 +10,28 @@ interface UndoToastProps {
 }
 
 export default function UndoToast({ onUndo }: UndoToastProps) {
-<<<<<<< HEAD
-  const { canUndo, undoStack } = useUndoStore();
-  const [visible, setVisible] = useState(true);
-=======
   const undoStack = useUndoStore((state) => state.undoStack);
   const dismissUndoAction = useUndoStore((state) => state.dismissUndoAction);
->>>>>>> 2f0d7ba (Full commit)
+  const [visible, setVisible] = useState(false);
 
   const hasUndo = undoStack.length > 0;
   const lastAction = hasUndo ? undoStack[0] : null;
 
   useEffect(() => {
-    if (!lastAction) return;
+    if (!lastAction) {
+      setVisible(false);
+      return;
+    }
 
+    setVisible(true);
     const timer = setTimeout(() => {
       dismissUndoAction(lastAction.id);
     }, DEFAULT_TOAST_DURATION);
 
     return () => clearTimeout(timer);
-  }, [dismissUndoAction, lastAction]);
+  }, [lastAction?.id, dismissUndoAction]);
 
-  if (!lastAction) return null;
-
-  useEffect(() => {
-    setVisible(true);
-    const timer = setTimeout(() => setVisible(false), 3000);
-    return () => clearTimeout(timer);
-  }, [lastAction?.id]);
-
-  if (!visible) return null;
+  if (!lastAction || !visible) return null;
 
   return (
     <div className="flex items-center gap-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg p-3 animate-slide-in">

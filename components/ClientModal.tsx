@@ -312,14 +312,7 @@ export default function ClientModal({
                         selectedClient._id ||
                         selectedClient.id) && (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/20 backdrop-blur text-white">
-<<<<<<< HEAD
-                          N° Badge:{' '}
-                          {selectedClient.clientId ||
-                            selectedClient._id ||
-                            selectedClient.id}
-=======
                           ID Client: {selectedClient.clientId || selectedClient._id || selectedClient.id}
->>>>>>> 2f0d7ba (Full commit)
                         </span>
                       )}
                       {(section === 'sunlib' || section === 'otovo') && (
@@ -377,26 +370,12 @@ export default function ClientModal({
 
               {/* Quick Info Chips */}
               <div className="flex flex-wrap items-center gap-3 mt-4">
-<<<<<<< HEAD
-                {urgency &&
-                  !section.startsWith('consuel') &&
-                  section !== 'dp-refuses' &&
-                  section !== 'dp-accordes' && (
-                    <div
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${urgency.color}`}
-                    >
-                      <Clock className="h-3.5 w-3.5" weight="bold" />
-                      {urgency.label} ({urgency.diffDays}j)
-                    </div>
-                  )}
-=======
                 {urgency && section === 'dp-en-cours' && (
                   <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${urgency.color}`}>
                     <Clock className="h-3.5 w-3.5" weight="bold" />
                     {urgency.label} ({urgency.diffDays}j)
                   </div>
                 )}
->>>>>>> 2f0d7ba (Full commit)
                 {selectedClient.financement && (
                   <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-white/20 backdrop-blur text-white border border-white/30">
                     <Tag className="h-3.5 w-3.5" weight="bold" />

@@ -446,14 +446,13 @@ function ClientTableNew({
                   </th>
                 ))}
                 <th className="px-4 py-3 text-right">Actions</th>
-                <th className="px-4 py-3 text-left">N° Badge</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 <tr>
                   <td
-                    colSpan={columns.length + 2}
+                    colSpan={columns.length + 1}
                     className="px-4 py-12 text-center"
                   >
                     <div className="animate-pulse space-y-3">
@@ -469,7 +468,7 @@ function ClientTableNew({
               ) : clients.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={columns.length + 2}
+                    colSpan={columns.length + 1}
                     className="px-4 py-12 text-center text-slate-500 dark:text-slate-400"
                   >
                     Aucun résultat trouvé
@@ -594,9 +593,6 @@ function ClientTableNew({
                           </Tooltip>
                         )}
                       </div>
-                    </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-xs text-slate-600 dark:text-slate-300">
-                      {client.clientId || '-'}
                     </td>
                   </tr>
                 ))

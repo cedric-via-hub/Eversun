@@ -6,7 +6,7 @@ import logger from '@/lib/logger';
 export const ClientSchema = new mongoose.Schema({
   id: { type: mongoose.Schema.Types.Mixed, required: false },
   /** Identifiant unique persistant du client à travers toutes les sections */
-  clientId: { type: String, required: false, index: true },
+  clientId: { type: String, required: true, index: true, trim: true },
   section: {
     type: String,
     required: true,
