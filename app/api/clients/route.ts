@@ -360,13 +360,7 @@ export async function POST(request: Request) {
         '';
 
       // Générer un clientId unique si non fourni
-<<<<<<< HEAD
-      const clientId =
-        data.clientId ||
-        `CLI-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-=======
-      const clientId = data.clientId || `EV-00${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
->>>>>>> 2f0d7ba (Full commit)
+      const clientId = (data.clientId && data.clientId.trim()) || `EV-00${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
       const createPayload = {
         ...data,

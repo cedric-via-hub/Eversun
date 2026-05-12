@@ -122,6 +122,12 @@ export async function PUT(
     }
 
     const updatedStages = buildStageUpdate(payload, existing as ExistingDocument);
+    
+    // S'assurer que le clientId est toujours préservé
+    if (!payload.clientId && (existing as any).clientId) {
+      payload.clientId = (existing as any).clientId;
+    }
+    
     const updated = await Model.findByIdAndUpdate(
       id,
       { ...payload, stages: updatedStages },
@@ -422,6 +428,12 @@ export async function PATCH(
     }
 
     const updatedStages = buildStageUpdate(payload, existing as ExistingDocument);
+    
+    // S'assurer que le clientId est toujours préservé
+    if (!payload.clientId && (existing as any).clientId) {
+      payload.clientId = (existing as any).clientId;
+    }
+    
     const updated = await Model.findByIdAndUpdate(
       id,
       { ...payload, stages: updatedStages },

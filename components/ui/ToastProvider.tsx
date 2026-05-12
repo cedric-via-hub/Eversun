@@ -87,15 +87,6 @@ export default function ToastProvider() {
   const getBgColor = (type: string) => {
     switch (type) {
       case 'success':
-<<<<<<< HEAD
-        return 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-700';
-      case 'error':
-        return 'bg-rose-50 dark:bg-rose-900/30 border-rose-200 dark:border-rose-700';
-      case 'warning':
-        return 'bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-700';
-      case 'info':
-        return 'bg-sky-50 dark:bg-sky-900/30 border-sky-200 dark:border-sky-700';
-=======
         return 'bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-700';
       case 'error':
         return 'bg-red-50 dark:bg-red-900 border-red-200 dark:border-red-700';
@@ -103,7 +94,6 @@ export default function ToastProvider() {
         return 'bg-yellow-50 dark:bg-yellow-900 border-yellow-200 dark:border-yellow-700';
       case 'info':
         return 'bg-teal-50 dark:bg-teal-900 border-teal-200 dark:border-teal-700';
->>>>>>> 2f0d7ba (Full commit)
       default:
         return 'bg-slate-50 dark:bg-slate-900/80 border-slate-200 dark:border-slate-700';
     }

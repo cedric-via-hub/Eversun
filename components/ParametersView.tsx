@@ -19,6 +19,8 @@ import {
   Trash,
   Database,
   ArrowsClockwise,
+  Key,
+  Play,
 } from '@phosphor-icons/react';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { parseJsonSafe } from '@/lib/utils';
@@ -80,6 +82,13 @@ const exportFormats = [
 
 type ExportStep = 'format' | 'section' | 'loading';
 
+interface MigrationStatus {
+  totalClients: number;
+  clientsWithoutId: number;
+  clientsWithId: number;
+  migrationNeeded: boolean;
+}
+
 export default function ParametersView() {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -90,6 +99,8 @@ export default function ParametersView() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [showClearCacheConfirm, setShowClearCacheConfirm] = useState(false);
   const [cacheSize, setCacheSize] = useState<string>('0 KB');
+  const [migrationStatus, setMigrationStatus] = useState<MigrationStatus | null>(null);
+  const [isMigrating, setIsMigrating] = useState(false);
 
   // Calculate cache size
   const calculateCacheSize = () => {
@@ -123,7 +134,49 @@ export default function ParametersView() {
   useEffect(() => {
     setIsDarkMode(document.documentElement.classList.contains('dark'));
     setCacheSize(calculateCacheSize());
+    checkMigrationStatus();
   }, []);
+
+  const checkMigrationStatus = async () => {
+    try {
+      const response = await fetch('/api/clients/migrate');
+      const data = await response.json();
+      setMigrationStatus(data);
+    } catch (error) {
+      console.error('Error checking migration status:', error);
+    }
+  };
+
+  const executeMigration = async () => {
+    setIsMigrating(true);
+    try {
+      const response = await fetch('/api/clients/migrate', {
+        method: 'POST',
+      });
+      const result = await response.json();
+
+      if (response.ok) {
+        setMessage({
+          type: 'success',
+          text: result.message || 'Migration des clientIds réussie!',
+        });
+        await checkMigrationStatus();
+      } else {
+        setMessage({
+          type: 'error',
+          text: result.error || 'Erreur lors de la migration',
+        });
+      }
+    } catch (error) {
+      console.error('Migration error:', error);
+      setMessage({
+        type: 'error',
+        text: 'Erreur lors de la migration des clientIds',
+      });
+    } finally {
+      setIsMigrating(false);
+    }
+  };
 
   const toggleDarkMode = () => {
     const newDarkMode = !isDarkMode;
@@ -430,6 +483,115 @@ export default function ParametersView() {
               </button>
             </div>
           </div>
+        </div>
+
+        {/* Client ID Management Section */}
+        <div className="mt-6 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+              <Key className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+              Gestion des ID Client
+            </h2>
+          </div>
+
+          <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
+            Gérez les identifiants uniques de vos clients à travers toutes les démarches
+          </p>
+
+          {migrationStatus ? (
+            <div className="space-y-4">
+              {/* Status Cards */}
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-4">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Total des clients</p>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                    {migrationStatus.totalClients}
+                  </p>
+                </div>
+                <div className={`rounded-lg p-4 ${
+                  migrationStatus.clientsWithId > 0 
+                    ? 'bg-green-50 dark:bg-green-900/20' 
+                    : 'bg-slate-50 dark:bg-slate-700/50'
+                }`}>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Avec ID Client</p>
+                  <p className={`text-2xl font-bold ${
+                    migrationStatus.clientsWithId > 0
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-slate-900 dark:text-white'
+                  }`}>
+                    {migrationStatus.clientsWithId}
+                  </p>
+                </div>
+                <div className={`rounded-lg p-4 ${
+                  migrationStatus.clientsWithoutId > 0
+                    ? 'bg-amber-50 dark:bg-amber-900/20'
+                    : 'bg-slate-50 dark:bg-slate-700/50'
+                }`}>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Sans ID Client</p>
+                  <p className={`text-2xl font-bold ${
+                    migrationStatus.clientsWithoutId > 0
+                      ? 'text-amber-600 dark:text-amber-400'
+                      : 'text-slate-900 dark:text-white'
+                  }`}>
+                    {migrationStatus.clientsWithoutId}
+                  </p>
+                </div>
+              </div>
+
+              {/* Migration Status Alert */}
+              {migrationStatus.migrationNeeded ? (
+                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 flex items-start gap-3">
+                  <WarningCircle className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" weight="fill" />
+                  <div>
+                    <p className="font-medium text-amber-900 dark:text-amber-200">
+                      Migration requise
+                    </p>
+                    <p className="text-sm text-amber-800 dark:text-amber-300 mt-1">
+                      {migrationStatus.clientsWithoutId} client(s) n'ont pas encore d'ID Client unique. 
+                      Cliquez sur le bouton ci-dessous pour les assigner automatiquement.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 flex items-start gap-3">
+                  <CheckCircle className="text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" weight="fill" />
+                  <div>
+                    <p className="font-medium text-green-900 dark:text-green-200">
+                      Tous les clients ont un ID Client
+                    </p>
+                    <p className="text-sm text-green-800 dark:text-green-300 mt-1">
+                      Votre base de données est à jour !
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Migration Button */}
+              <button
+                onClick={executeMigration}
+                disabled={isMigrating || !migrationStatus.migrationNeeded}
+                className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+              >
+                {isMigrating ? (
+                  <>
+                    <LoadingSpinner size="sm" />
+                    Migration en cours...
+                  </>
+                ) : (
+                  <>
+                    <Play weight="bold" className="w-5 h-5" />
+                    Exécuter la migration
+                  </>
+                )}
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center py-8">
+              <LoadingSpinner size="md" />
+            </div>
+          )}
         </div>
 
         {/* Information Box */}
