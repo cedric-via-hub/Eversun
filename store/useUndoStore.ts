@@ -21,6 +21,7 @@ interface UndoStore {
   // Actions
   pushUndoAction: (action: Omit<UndoAction, 'id' | 'timestamp'>) => void;
   undoLastAction: () => UndoAction | null;
+  dismissUndoAction: (id: string) => void;
   clearUndoStack: () => void;
   canUndo: () => boolean;
 }
@@ -53,6 +54,11 @@ export const useUndoStore = create<UndoStore>((set, get) => ({
     }));
     
     return lastAction;
+  },
+  dismissUndoAction: (id) => {
+    set((state) => ({
+      undoStack: state.undoStack.filter((action) => action.id !== id),
+    }));
   },
   
   clearUndoStack: () => {

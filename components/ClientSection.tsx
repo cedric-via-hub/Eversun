@@ -100,7 +100,7 @@ export default function ClientSection({ section }: ClientSectionProps) {
   const createConsuelCopy = async (record: ClientRecord) => {
     try {
       // Générer un clientId si le client n'en a pas (clients existants avant la mise à jour)
-      const clientId = record.clientId || `CLI-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+      const clientId = record.clientId || `EV-00${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
       const consuelRecord = {
         ...record,
@@ -124,6 +124,13 @@ export default function ClientSection({ section }: ClientSectionProps) {
         const result = await res.json();
         toast.success(`${record.client} ajouté à Consuel En Cours (ID: ${result.clientId || clientId})`);
         refetchCounts();
+        // Refresh table data in real-time
+        if (refreshTableRef.current) {
+          refreshTableRef.current();
+        }
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('forceRefresh', { detail: { section: 'consuel-en-cours' } }));
+        }
       }
     } catch (error) {
       console.error('Erreur création Consuel:', error);
@@ -134,7 +141,7 @@ export default function ClientSection({ section }: ClientSectionProps) {
   const createRaccordementCopy = async (record: ClientRecord) => {
     try {
       // Générer un clientId si le client n'en a pas (clients existants avant la mise à jour)
-      const clientId = record.clientId || `CLI-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+      const clientId = record.clientId || `EV-00${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
       // Vérifier si une copie existe déjà dans Raccordement
       const existingRes = await fetch(`/api/clients?section=raccordement&clientId=${encodeURIComponent(clientId)}`);
@@ -167,6 +174,13 @@ export default function ClientSection({ section }: ClientSectionProps) {
         const result = await res.json();
         toast.success(`${record.client} ajouté à Raccordement (ID: ${result.clientId || clientId})`);
         refetchCounts();
+        // Refresh table data in real-time
+        if (refreshTableRef.current) {
+          refreshTableRef.current();
+        }
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('forceRefresh', { detail: { section: 'raccordement' } }));
+        }
       }
     } catch (error) {
       console.error('Erreur création Raccordement:', error);
@@ -413,6 +427,13 @@ export default function ClientSection({ section }: ClientSectionProps) {
               description: `Modification de ${record.client}`,
             });
             refetchCounts();
+            // Refresh table data in real-time
+            if (refreshTableRef.current) {
+              refreshTableRef.current();
+            }
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('forceRefresh', { detail: { section: newSection } }));
+            }
           }
         } else {
           setClients(previousClients);
@@ -456,6 +477,13 @@ export default function ClientSection({ section }: ClientSectionProps) {
           description: `Création de ${saved.client}`,
         });
         refetchCounts();
+        // Refresh table data in real-time
+        if (refreshTableRef.current) {
+          refreshTableRef.current();
+        }
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('forceRefresh', { detail: { section } }));
+        }
       } else {
         setClients(previousClients);
         const error = await res.json();
@@ -494,6 +522,9 @@ export default function ClientSection({ section }: ClientSectionProps) {
         if (refreshTableRef.current) {
           refreshTableRef.current();
         }
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('forceRefresh', { detail: { section } }));
+        }
       } else {
         const error = await res.json();
         toast.error(
@@ -524,6 +555,10 @@ export default function ClientSection({ section }: ClientSectionProps) {
     }
     // Rafraîchir aussi les compteurs
     refetchCounts();
+    // Informer les autres vues que les données ont changé
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('forceRefresh', { detail: { section } }));
+    }
   };
 
   const handleUndo = async () => {

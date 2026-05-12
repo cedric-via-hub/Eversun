@@ -8,7 +8,7 @@ export type ToastType = 'success' | 'error' | 'warning' | 'info';
 /**
  * Interface représentant une notification toast
  */
-const DEFAULT_TOAST_DURATION = 3000;
+export const DEFAULT_TOAST_DURATION = 3000;
 
 interface Toast {
   /** Identifiant unique du toast (généré automatiquement) */
