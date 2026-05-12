@@ -2,19 +2,37 @@
 
 import { useState, useEffect } from 'react';
 import { ArrowUUpLeft } from '@phosphor-icons/react';
+import { useEffect } from 'react';
 import { useUndoStore } from '@/store/useUndoStore';
+import { DEFAULT_TOAST_DURATION } from '@/store/useToastStore';
 
 interface UndoToastProps {
   onUndo: () => void;
 }
 
 export default function UndoToast({ onUndo }: UndoToastProps) {
+<<<<<<< HEAD
   const { canUndo, undoStack } = useUndoStore();
   const [visible, setVisible] = useState(true);
+=======
+  const undoStack = useUndoStore((state) => state.undoStack);
+  const dismissUndoAction = useUndoStore((state) => state.dismissUndoAction);
+>>>>>>> 2f0d7ba (Full commit)
 
-  if (!canUndo() || undoStack.length === 0) return null;
+  const hasUndo = undoStack.length > 0;
+  const lastAction = hasUndo ? undoStack[0] : null;
 
-  const lastAction = undoStack[0];
+  useEffect(() => {
+    if (!lastAction) return;
+
+    const timer = setTimeout(() => {
+      dismissUndoAction(lastAction.id);
+    }, DEFAULT_TOAST_DURATION);
+
+    return () => clearTimeout(timer);
+  }, [dismissUndoAction, lastAction]);
+
+  if (!lastAction) return null;
 
   useEffect(() => {
     setVisible(true);

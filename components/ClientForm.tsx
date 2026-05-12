@@ -63,7 +63,33 @@ const daactStatuts = ['En attente', 'Validé', 'Refusé'];
 // Validation rules based on section
 const getValidationRules = (section: Section) => {
   const rules: Record<string, any> = {
-    client: { required: true },
+    client: {
+      required: true,
+      async: async (value: string, context: any) => {
+        const clientName = typeof value === 'string' ? value.trim() : '';
+        if (!clientName) return null;
+
+        try {
+          const response = await fetch(
+            `/api/clients?section=${encodeURIComponent(section)}&search=${encodeURIComponent(clientName)}&limit=1000`
+          );
+          if (response.ok) {
+            const data = await response.json();
+            const clients = data.clients || data;
+            const hasDuplicate = clients.some((client: any) =>
+              client.client?.trim().toLowerCase() === clientName.toLowerCase() &&
+              (!context?.currentClient?._id || client._id !== context.currentClient._id)
+            );
+            if (hasDuplicate) {
+              return 'Un client avec ce nom existe déjà dans cette section.';
+            }
+          }
+        } catch (error) {
+          console.error('Erreur lors de la vérification des doublons:', error);
+        }
+        return null;
+      },
+    },
   };
 
   if (!section.startsWith('dp') && section !== 'daact') {
@@ -84,7 +110,7 @@ export default function ClientForm({
   onClose,
 }: ClientFormProps) {
   const validationRules = getValidationRules(section);
-  const { errors: validationErrors, validateField, validateForm: validateFormHook, clearFieldError } = useFormValidation(validationRules);
+  const { errors: validationErrors, validateField, validateForm: validateFormHook, validateFormAsync, clearFieldError, isValidating } = useFormValidation(validationRules);
   const { getTemplates, applyTemplate } = useClientTemplates();
   const availableTemplates = getTemplates(section);
 
@@ -117,6 +143,7 @@ export default function ClientForm({
   const [isEditing, setIsEditing] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
+  const [generalError, setGeneralError] = useState<string>('');
   const [dpAccordesClients, setDpAccordesClients] = useState<string[]>([]);
   const [dpAccordesData, setDpAccordesData] = useState<
     Record<string, { noDp: string; ville: string }>
@@ -409,6 +436,12 @@ export default function ClientForm({
       return next;
     });
 
+    // Clear field-specific and global validation errors
+    clearFieldError(key);
+    if (generalError) {
+      setGeneralError('');
+    }
+
     // Real-time validation
     validateField(key, value);
   };
@@ -428,8 +461,13 @@ export default function ClientForm({
     e.preventDefault();
     console.log('handleSubmit called with form:', form);
 
-    if (!validateFormHook(form)) {
+    const isValid = await validateFormAsync({ ...form, currentClient: client });
+    if (!isValid) {
       console.log('Validation failed:', validationErrors);
+      setGeneralError(
+        validationErrors.client ||
+          'Erreur de validation : vérifiez les champs du formulaire.'
+      );
       return;
     }
 
@@ -620,6 +658,11 @@ export default function ClientForm({
             </div>
           )}
           <form onSubmit={handleSubmit} className="space-y-3">
+            {generalError && (
+              <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {generalError}
+              </div>
+            )}
             {section.startsWith('consuel') &&
               form.statut === 'Consuel visé' && (
                 <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded p-1.5">
@@ -1157,9 +1200,10 @@ export default function ClientForm({
                 </Button>
                 <Button
                   type="submit"
-                  loading={isSubmitting}
+                  loading={isSubmitting || isValidating}
+                  disabled={isValidating}
                   icon={
-                    isSubmitting ? null : (
+                    (isSubmitting || isValidating) ? null : (
                       <FloppyDisk className="h-4 w-4" weight="bold" />
                     )
                   }
@@ -1167,9 +1211,11 @@ export default function ClientForm({
                 >
                   {isSubmitting
                     ? 'Enregistrement...'
-                    : client
-                      ? 'Mettre à jour'
-                      : 'Ajouter'}
+                    : isValidating
+                      ? 'Validation...'
+                      : client
+                        ? 'Mettre à jour'
+                        : 'Ajouter'}
                 </Button>
               </div>
             </div>

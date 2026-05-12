@@ -148,7 +148,8 @@ function ClientTableNew({
     if (section === 'sunlib' || section === 'otovo') {
       cols.push(
         { key: 'client', label: 'Client' },
-        { key: 'ville', label: 'Ville' }
+        { key: 'ville', label: 'Ville' },
+        { key: 'clientId', label: 'ID Client' }
       );
     } else if (isDp) {
       cols.push(
@@ -165,19 +166,22 @@ function ClientTableNew({
         cols.push({ key: 'identifiant', label: 'Identifiant' });
         cols.push({ key: 'motDePasse', label: 'Mot de passe' });
       }
+      cols.push({ key: 'clientId', label: 'ID Client' });
     } else if (section === 'daact') {
       cols.push(
         { key: 'client', label: 'Client' },
         { key: 'dateEnvoi', label: "Date d'envoi" },
         { key: 'statut', label: 'Statut' },
-        { key: 'commentaires', label: 'Commentaires' }
+        { key: 'commentaires', label: 'Commentaires' },
+        { key: 'clientId', label: 'ID Client' }
       );
     } else if (section === 'installation') {
       cols.push(
         { key: 'client', label: 'Client' },
         { key: 'dateEstimative', label: 'Date de pose prévu' },
         { key: 'statut', label: 'Statut' },
-        { key: 'commentaires', label: 'Commentaires' }
+        { key: 'commentaires', label: 'Commentaires' },
+        { key: 'clientId', label: 'ID Client' }
       );
     } else if (isConsuel) {
       cols.push(
@@ -185,7 +189,8 @@ function ClientTableNew({
         { key: 'dateEnvoi', label: "Date d'envoi" },
         { key: 'statut', label: 'Statut' },
         { key: 'typeConsuel', label: 'Type Consuel' },
-        { key: 'commentaires', label: 'Commentaires' }
+        { key: 'commentaires', label: 'Commentaires' },
+        { key: 'clientId', label: 'ID Client' }
       );
     } else if (isRaccordement) {
       cols.push(
@@ -193,7 +198,8 @@ function ClientTableNew({
         { key: 'statut', label: 'Statut' },
         { key: 'numeroContrat', label: 'N° Contrat' },
         { key: 'dateMiseEnService', label: 'Date MES' },
-        { key: 'commentaires', label: 'Commentaires' }
+        { key: 'commentaires', label: 'Commentaires' },
+        { key: 'clientId', label: 'ID Client' }
       );
     }
 

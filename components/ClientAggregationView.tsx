@@ -131,6 +131,16 @@ export default function ClientAggregationView() {
     fetchSectionCounts();
   }, []);
 
+  useEffect(() => {
+    const handleForceRefresh = () => {
+      fetchAllClients();
+      fetchSectionCounts();
+    };
+
+    window.addEventListener('forceRefresh', handleForceRefresh);
+    return () => window.removeEventListener('forceRefresh', handleForceRefresh);
+  }, []);
+
   // Rafraîchir les données quand l'utilisateur revient sur l'onglet
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -185,8 +195,13 @@ export default function ClientAggregationView() {
     
     // DAACT - validé si statut contient validé/fait/ok/transmis
     if (sectionKey === 'daact') {
-      if (status.includes('validé') || status.includes('fait') || status.includes('ok') || 
-          status.includes('transmis')) return true;
+      if (
+        status.includes('validé') ||
+        status.includes('valid') ||
+        status.includes('fait') ||
+        status.includes('ok') ||
+        status.includes('transmis')
+      ) return true;
     }
     
     // Raccordement - validé si statut contient service/transmis
